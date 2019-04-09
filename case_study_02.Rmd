@@ -1,0 +1,106 @@
+---
+title: "CaseStudy02"
+author: "Team ..."
+date: "April 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r }
+library(openxlsx)
+library(MASS)
+library(ggplot2)
+attritionData <- read.xlsx("CaseStudy2-data.xlsx")
+
+names(attritionData)
+str(attritionData)
+head(attritionData)
+
+# general landscape of attritiion - how many attritions?
+# clearly more no; not common to leave
+attritionYesCount <- length(attritionData$Attrition[attritionData$Attrition== "Yes"]) # 237
+attritionNoCount <- length(attritionData$Attrition[attritionData$Attrition== "No"]) # 1233
+attritionData$Attrition <- ifelse(attritionData$Attrition=="Yes", 1, 0)
+attritionData$Age <- as.integer(attritionData$Age)
+attritionData$AgeGroups <- cut(attritionData$Age, breaks=c(10,20,30,40,50,60))
+attritionYesData <- attritionData[attritionData$Attrition == 1,]
+
+
+
+# bar graph of attrition based on age
+barplot(attritionYesData$Age, lab)
+
+ageGroups <- c(18,35,52)
+cbind(findInterval(attritionYesData$Age, ageGroups, attritionYesData))
+      
+
+# group and classify by age
+if (attritionYesData$Age < 18){
+  attritionYesData$AgeGroup <- "pre_18"
+}else if(attritionYesData$Age > 18 && attritionYesData$Age < 35){
+  attritionYesData$AgeGroup <- "18_35"
+}else if(attritionYesData$Age > 35 && attritionYesData$Age < 52){
+  attritionYesData$AgeGroup <- "35_52"
+}
+
+# stepwise regression
+fit <- lm(Attrition~Age+Education, data=attritionYesData)
+logitFunc <- glm(Attrition ~ Age + YearsInCurrentRole, data=attritionData)
+
+# does age have an impact on attrition
+ggplot(attritionData, aes(x = AgeGroups, y = Attrition)) +
+    geom_bar(stat = "identity", fill = "#5EA9BE") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "Attrition Plot by. Age", y = "1 = Yes, 0 = No")
+
+ggplot(attritionData, aes(x = WorkLifeBalance, y = Attrition)) +
+    geom_bar(stat = "identity", fill = "#5EA9BE") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "Attrition Plot by Work Life Balance")
+
+ggplot(attritionData, aes(x = WorkLifeBalance, y = Attrition)) +
+    geom_bar(stat = "identity", fill = "#5EA9BE") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "Attrition Plot by Monthly Income")
+
+People retire, midlife crisis?
+WorklifeBalance
+People retire, midlife crisis?
+JobInvolvment/JobSatisfaction
+Are people bored? Are they engaged? Too much work?
+Years at company
+Do the longer people work at company deter them more from leaving?
+Job Role
+What jobs have the most people leaving? 
+Monthly Income
+Is there an average wage that causes people to leave?
+Gender
+Which gender is leaving more? 
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
