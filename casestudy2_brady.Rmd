@@ -1,0 +1,33 @@
+---
+title: "Case Study 2"
+author: "Brady Arendale"
+date: "April 11, 2019"
+output: 
+  html_document:
+    keep_md: true
+---
+```{r}
+# Read in data
+workers <- read.csv("CaseStudy2-data.csv")
+names(workers)[1] <- "Age"
+# Create dummy variables
+businesstravel <- model.matrix(~0+BusinessTravel, data = workers)
+department <- model.matrix(~0+Department, data = workers)
+educationfield <- model.matrix(~0+EducationField, data = workers)
+gender <- model.matrix(~0+Gender, data = workers)
+jobrole <- model.matrix(~0+JobRole, data = workers)
+maritalstatus <- model.matrix(~0+MaritalStatus, data = workers)
+overtime <- model.matrix(~0+OverTime, data = workers)
+# Add dummy variables to data frame
+workers <- data.frame(workers, businesstravel, department, educationfield, gender, jobrole, maritalstatus, overtime)
+# Run t-test for each variable on attrition
+workers <- workers[,-c(9, 10, 22, 27)]
+for (i in 1:59) {
+  print(names(workers)[i])
+  if(class(workers[,i]) != "factor") {
+    print(t.test(workers[,i] ~ Attrition, data = workers))
+  } else {
+    print("factor")
+  }
+}
+```
