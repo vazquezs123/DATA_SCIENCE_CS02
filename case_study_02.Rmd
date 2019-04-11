@@ -49,8 +49,8 @@ attritionData$YearlyIncomeGroup <- cut(attritionData$YearlyIncome,
                                            method="quantile")[2])[,1],
                                          include.lowest=T,dig.lab=10)
 
-attritionMaleCount <- length(attritionData$Gender[attritionYesData$Gender=="Male"])
-attritionFemaleCount <- length(attritionData$Gender[attritionYesData$Gender == "Female"])
+attritionMaleCount <- length(attritionData$Gender[attritionData$Gender=="Male"])
+attritionFemaleCount <- length(attritionData$Gender[attritionData$Gender == "Female"])
 attritionYesData <- attritionData[attritionData$Attrition == "Yes",]
 attritionYesMaleCount <- length(attritionYesData$Gender[attritionYesData$Gender=="Male"])
 attritionYesFemaleCount <- length(attritionYesData$Gender[attritionYesData$Gender == "Female"])
@@ -59,12 +59,26 @@ pairs(~Attrition+YearlyIncome+Age+Gender+JobInvolvement+JobSatisfaction+JobLevel
         YearsSinceLastPromotion+attritionData$MaritalStatus,data=attritionData, 
    main="Simple Scatterplot Matrix")
 
-pairs(~Attrition+YearlyIncome+Age+Gender+JobInvolvement+JobSatisfaction+JobLevel+Education+
-        YearsSinceLastPromotion,data=attritionData, 
+pairs(~Attrition+DailyRate+Age+DistanceFromHome+EnvironmentSatisfaction+JobSatisfaction+MonthlyIncome+MonthlyRate+
+        YearsSinceLastPromotion+PerformanceRating+JobInvolvement,data=attritionData, 
    main="Simple Scatterplot Matrix")
 
+# High Density Scatterplot with Binning
+library(hexbin)
+bin<-hexbin(attritionData$Age, attritionData$Attrition, xbins=50) 
+plot(bin, main="Attrion Age HeatMap")
+
+bin<-hexbin(attritionData$Age, attritionData$MonthlyIncome, xbins=50) 
+plot(bin, main="Attrion Monthly Income HeatMap")
+
+hexbinplot(DistanceFromHome ~ Age | Attrition, attritionData)
+
+
+library(lattice)
+splom(attritionData[])
+
 # generate scatter plot matrix
-pairs(~mpg+disp+drat+wt,data=mtcars, 
+pairs(~mpg+disp+drat+wt, aes(),data=mtcars, 
    main="Simple Scatterplot Matrix")
 
 # stepwise regression
@@ -117,6 +131,7 @@ ggplot(attritionData, aes(x = DistanceFromHome, y = Attrition, col=AgeGroups)) +
     geom_bar(stat = "identity", aes(fill=AgeGroups))  +
     labs(title = "Attrition Distance from home Age Group by Gender Plot") + facet_grid(. ~ Gender)
 ggsave("Attrition_DistanceFromHome_AgeGroup_Plot.png")
+
 
 
 
