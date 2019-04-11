@@ -1,0 +1,14 @@
+- daily rate probably better metric than hourly rate, reason being that the 
+daily rate gives us more of an idea of the hours worked in a day and we can
+infer an average of hours worked per day
+	- We know from standardHours variable 80 hrs per 2 work weeks.
+		- which means 40hr/weeks
+		
+- graph highlighting
+- variables to dismiss:
+	- employee count because its always equal to 1
+	- employee number just unique id
+	- over18 because everyone is over 18
+	- StandardHours everyone work 80 hours
+	
+-
