@@ -6,6 +6,7 @@ output:
   html_document:
     keep_md: true
 ---
+# T-test
 ```{r}
 # Read in data
 workers <- read.csv("CaseStudy2-data.csv")
@@ -21,8 +22,8 @@ overtime <- model.matrix(~0+OverTime, data = workers)
 # Add dummy variables to data frame
 workers <- data.frame(workers, businesstravel, department, educationfield, gender, jobrole, maritalstatus, overtime)
 # Run t-test for each variable on attrition
-workers <- workers[,-c(9, 10, 22, 27)]
-for (i in 1:59) {
+workers <- workers[,-c(3, 5, 8, 9, 10, 12, 16, 18, 22, 23, 27)]
+for (i in 1:52) {
   print(names(workers)[i])
   if(class(workers[,i]) != "factor") {
     print(t.test(workers[,i] ~ Attrition, data = workers))
@@ -30,4 +31,11 @@ for (i in 1:59) {
     print("factor")
   }
 }
+```
+
+# Logistic regression model
+```{r}
+model.full <- glm(Attrition ~ ., data = workers, family = binomial)
+model.step <- step(model.full)
+summary(model.step)
 ```
