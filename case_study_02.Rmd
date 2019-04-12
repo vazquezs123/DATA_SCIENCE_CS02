@@ -21,17 +21,26 @@ library(openxlsx)
 library(MASS)
 library(ggplot2)
 library(classInt)
+library(hexbin)
 attritionData <- read.xlsx("CaseStudy2-data.xlsx")
 
-# general landscape of attritiion - how many attritions?
-# clearly more no; not common to leave
+# recode variables
 attritionYesCount <- length(attritionData$Attrition[attritionData$Attrition== "Yes"]) # 237
 attritionNoCount <- length(attritionData$Attrition[attritionData$Attrition== "No"]) # 1233
 attritionData$Attrition <- as.factor(attritionData$Attrition)
 attritionData$Gender <- as.factor(attritionData$Gender)
-
 attritionData$Age <- as.integer(attritionData$Age)
 attritionData$JobRole <- as.factor(attritionData$JobRole)
+attritionData$Education <- as.factor(attritionData$Education)
+attritionData$BusinessTravel <- as.factor(attritionData$BusinessTravel)
+attritionData$Department <- as.factor(attritionData$Department)
+attritionData$EducationField <- as.factor(attritionData$EducationField)
+attritionData$Gender <- as.factor(attritionData$Gender)
+attritionData$MaritalStatus <- as.factor(attritionData$MaritalStatus)
+attritionData$Over18 <- as.factor(attritionData$Over18)
+attritionData$OverTime <- as.factor(attritionData$OverTime)
+attritionData$MaritalStatus <- as.factor(attritionData$MaritalStatus)
+attritionData$MaritalStatus <- as.factor(attritionData$MaritalStatus)
 attritionData$MaritalStatus <- as.factor(attritionData$MaritalStatus)
 attritionData$AgeGroups <- cut(attritionData$Age, breaks=c(10,20,30,40,50,60))
 attritionData$MonthlyIncomeGroup <-cut(attritionData$MonthlyIncome, 
@@ -41,6 +50,7 @@ attritionData$MonthlyIncomeGroup <-cut(attritionData$MonthlyIncome,
                                            method="quantile")[2])[,1],
                                          include.lowest=T,dig.lab=10)
 
+# derive annual income and classify into income group
 attritionData$YearlyIncome <- attritionData$MonthlyIncome*12
 attritionData$YearlyIncomeGroup <- cut(attritionData$YearlyIncome, 
                                        breaks=data.frame(
@@ -49,37 +59,56 @@ attritionData$YearlyIncomeGroup <- cut(attritionData$YearlyIncome,
                                            method="quantile")[2])[,1],
                                          include.lowest=T,dig.lab=10)
 
+# Might not need these, but will leave for now. Should remove if not used by final clean up
 attritionMaleCount <- length(attritionData$Gender[attritionData$Gender=="Male"])
 attritionFemaleCount <- length(attritionData$Gender[attritionData$Gender == "Female"])
 attritionYesData <- attritionData[attritionData$Attrition == "Yes",]
 attritionYesMaleCount <- length(attritionYesData$Gender[attritionYesData$Gender=="Male"])
 attritionYesFemaleCount <- length(attritionYesData$Gender[attritionYesData$Gender == "Female"])
 
-pairs(~Attrition+YearlyIncome+Age+Gender+JobInvolvement+JobSatisfaction+JobLevel+Education+
-        YearsSinceLastPromotion+attritionData$MaritalStatus,data=attritionData, 
-   main="Simple Scatterplot Matrix")
+# generate linear model and run stepwise-selection model method
+lm.full <- glm(Attrition ~ DistanceFromHome + Age + MonthlyIncome + Education + HourlyRate + HourlyRate + MonthlyIncome + PerformanceRating + WorkLifeBalance + 
+                    JobLevel + NumCompaniesWorked + YearsInCurrentRole + YearsInCurrentRole + YearlyIncomeGroup + DailyRate + JobRole + StockOptionLevel + 
+                    YearsSinceLastPromotion + Department + EnvironmentSatisfaction, data = attritionData, family = binomial)
+lm.null <- glm(Attrition ~ 1, data = attritionData, family = binomial)
 
-pairs(~Attrition+DailyRate+Age+DistanceFromHome+EnvironmentSatisfaction+JobSatisfaction+MonthlyIncome+MonthlyRate+
-        YearsSinceLastPromotion+PerformanceRating+JobInvolvement,data=attritionData, 
-   main="Simple Scatterplot Matrix")
+model.aic.stepwise <- step(lm.null, direction="both", trace=1, scope = ~ DistanceFromHome + Age + MonthlyIncome + Education + HourlyRate + HourlyRate + MonthlyIncome +
+                             PerformanceRating + WorkLifeBalance + JobLevel + NumCompaniesWorked + YearsInCurrentRole + YearsInCurrentRole + YearlyIncomeGroup + DailyRate +
+                             JobRole + StockOptionLevel + YearsSinceLastPromotion + Department + EnvironmentSatisfaction, data = attritionData, family = binomial)
 
-# High Density Scatterplot with Binning
-library(hexbin)
-bin<-hexbin(attritionData$Age, attritionData$Attrition, xbins=50) 
-plot(bin, main="Attrion Age HeatMap")
+# create scatter plot based model selection results
+# looking at: JobLevel, PerformanceRating, MonthlyIncome, HourlyRate, Department
+pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome+HourlyRate+Department,
+      data=attritionData, main="Stepwise Variable Selection Matrix")
+
+
+bin<-hexbin(attritionData$MonthlyIncome, attritionData$Attrition, xbins=50) 
+plot(bin, main="Attrion Monthly Income HeatMap", xlab="Monthly Income", ylab="Attrition")
 
 bin<-hexbin(attritionData$Age, attritionData$MonthlyIncome, xbins=50) 
 plot(bin, main="Attrion Monthly Income HeatMap")
 
-hexbinplot(DistanceFromHome ~ Age | Attrition, attritionData)
+# heatmap of Job Level related to Monthly Income grouped by Attrition
+hexbinplot(JobLevel ~ MonthlyIncome | Attrition, attritionData,
+           xlab="Monthly Income", ylab="Job Level")
 
+# heatmap of Distance From Home related to Job Level grouped by Attrition
+hexbinplot(DistanceFromHome ~ JobLevel | Attrition, attritionData,
+           ylab="Distance from Home", xlab="Job Level")
+
+# heatmap of Job Level related to Hourly Rate grouped by Attrition
+hexbinplot(JobLevel ~ HourlyRate | Attrition, attritionData,
+           ylab="Job Level", xlab="Hourly Rate")
+
+
+# heatmap of Education related to Hourly Rate grouped by Attrition
+hexbinplot(as.integer(Education) ~ HourlyRate | Attrition, attritionData,
+           ylab="Education", xlab="Hourly Rate")
+
+# create 
 
 library(lattice)
 splom(attritionData[])
-
-# generate scatter plot matrix
-pairs(~mpg+disp+drat+wt, aes(),data=mtcars, 
-   main="Simple Scatterplot Matrix")
 
 # stepwise regression
 fit <- lm(Attrition~Age+Education, data=attritionYesData)
