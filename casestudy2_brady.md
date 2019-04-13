@@ -12,6 +12,7 @@ output:
 # Read in data
 workers <- read.csv("CaseStudy2-data.csv")
 names(workers)[1] <- "Age"
+workers2 <- workers
 # Create dummy variables
 businesstravel <- model.matrix(~0+BusinessTravel, data = workers)
 department <- model.matrix(~0+Department, data = workers)
@@ -1757,6 +1758,347 @@ summary(model.step)
 ##     Null deviance: 1298.58  on 1469  degrees of freedom
 ## Residual deviance:  868.01  on 1440  degrees of freedom
 ## AIC: 928.01
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+# Top three contributors?
+
+```r
+workers <- workers2
+# Overall three biggest contributors to attrition
+lm.null <- glm(Attrition ~ 1, data = workers, family = binomial)
+add1(lm.null, ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+```
+
+```
+## Single term additions
+## 
+## Model:
+## Attrition ~ 1
+##                          Df Deviance    AIC    LRT  Pr(>Chi)    
+## <none>                        1298.6 1300.6                     
+## Age                       1   1259.1 1263.1 39.508 3.268e-10 ***
+## BusinessTravel            2   1274.8 1280.8 23.760 6.927e-06 ***
+## DailyRate                 1   1293.9 1297.9  4.727  0.029692 *  
+## Department                2   1288.1 1294.1 10.490  0.005273 ** 
+## DistanceFromHome          1   1290.0 1294.0  8.580  0.003399 ** 
+## Education                 1   1297.1 1301.1  1.440  0.230192    
+## EnvironmentSatisfaction   1   1283.1 1287.1 15.502 8.241e-05 ***
+## Gender                    1   1297.3 1301.3  1.286  0.256859    
+## HourlyRate                1   1298.5 1302.5  0.069  0.792976    
+## JobInvolvement            1   1274.5 1278.5 24.131 9.002e-07 ***
+## JobLevel                  1   1249.9 1253.9 48.691 2.996e-12 ***
+## JobRole                   8   1209.7 1227.7 88.909 7.743e-16 ***
+## JobSatisfaction           1   1283.0 1287.0 15.529 8.127e-05 ***
+## MaritalStatus             2   1254.6 1260.6 44.000 2.790e-10 ***
+## MonthlyIncome             1   1253.1 1257.1 45.487 1.537e-11 ***
+## MonthlyRate               1   1298.2 1302.2  0.338  0.560818    
+## NumCompaniesWorked        1   1295.9 1299.9  2.711  0.099629 .  
+## OverTime                  1   1217.2 1221.2 81.402 < 2.2e-16 ***
+## PercentSalaryHike         1   1298.3 1302.3  0.269  0.604063    
+## PerformanceRating         1   1298.6 1302.6  0.012  0.911958    
+## RelationshipSatisfaction  1   1295.5 1299.5  3.071  0.079679 .  
+## StockOptionLevel          1   1267.9 1271.9 30.706 3.003e-08 ***
+## TotalWorkingYears         1   1248.1 1252.1 50.507 1.187e-12 ***
+## TrainingTimesLastYear     1   1293.3 1297.3  5.319  0.021098 *  
+## WorkLifeBalance           1   1292.7 1296.7  5.896  0.015173 *  
+## YearsAtCompany            1   1266.5 1270.5 32.083 1.477e-08 ***
+## YearsInCurrentRole        1   1255.9 1259.9 42.700 6.382e-11 ***
+## YearsSinceLastPromotion   1   1296.9 1300.9  1.674  0.195775    
+## YearsWithCurrManager      1   1258.7 1262.7 39.867 2.719e-10 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+add1(update(lm.null, ~ . + OverTime), ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+```
+
+```
+## Single term additions
+## 
+## Model:
+## Attrition ~ OverTime
+##                          Df Deviance    AIC    LRT  Pr(>Chi)    
+## <none>                        1217.2 1221.2                     
+## Age                       1   1172.3 1178.3 44.857 2.119e-11 ***
+## BusinessTravel            2   1195.7 1203.7 21.444 2.205e-05 ***
+## DailyRate                 1   1211.8 1217.8  5.417  0.019936 *  
+## Department                2   1206.2 1214.2 10.949  0.004191 ** 
+## DistanceFromHome          1   1209.4 1215.4  7.824  0.005156 ** 
+## Education                 1   1216.1 1222.1  1.064  0.302330    
+## EnvironmentSatisfaction   1   1194.1 1200.1 23.056 1.573e-06 ***
+## Gender                    1   1214.7 1220.7  2.490  0.114601    
+## HourlyRate                1   1217.1 1223.1  0.039  0.844166    
+## JobInvolvement            1   1191.9 1197.9 25.325 4.844e-07 ***
+## JobLevel                  1   1165.5 1171.5 51.647 6.642e-13 ***
+## JobRole                   8   1120.0 1140.0 97.186 < 2.2e-16 ***
+## JobSatisfaction           1   1198.8 1204.8 18.365 1.824e-05 ***
+## MaritalStatus             2   1168.7 1176.7 48.512 2.922e-11 ***
+## MonthlyIncome             1   1167.8 1173.8 49.363 2.128e-12 ***
+## MonthlyRate               1   1217.0 1223.0  0.153  0.695688    
+## NumCompaniesWorked        1   1213.5 1219.5  3.659  0.055762 .  
+## PercentSalaryHike         1   1217.0 1223.0  0.229  0.632229    
+## PerformanceRating         1   1217.2 1223.2  0.005  0.942970    
+## RelationshipSatisfaction  1   1211.9 1217.9  5.256  0.021874 *  
+## StockOptionLevel          1   1185.1 1191.1 32.036 1.513e-08 ***
+## TotalWorkingYears         1   1162.6 1168.6 54.601 1.477e-13 ***
+## TrainingTimesLastYear     1   1214.5 1220.5  2.680  0.101614    
+## WorkLifeBalance           1   1212.1 1218.1  5.115  0.023724 *  
+## YearsAtCompany            1   1185.9 1191.9 31.249 2.270e-08 ***
+## YearsInCurrentRole        1   1176.1 1182.1 41.063 1.474e-10 ***
+## YearsSinceLastPromotion   1   1215.7 1221.7  1.469  0.225487    
+## YearsWithCurrManager      1   1179.8 1185.8 37.399 9.627e-10 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+add1(update(lm.null, ~ . + OverTime + JobRole), ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+```
+
+```
+## Single term additions
+## 
+## Model:
+## Attrition ~ OverTime + JobRole
+##                          Df Deviance    AIC    LRT  Pr(>Chi)    
+## <none>                        1120.0 1140.0                     
+## Age                       1   1107.5 1129.5 12.460 0.0004158 ***
+## BusinessTravel            2   1101.7 1125.7 18.270 0.0001078 ***
+## DailyRate                 1   1112.9 1134.9  7.055 0.0079032 ** 
+## Department                2   1118.6 1142.6  1.413 0.4933658    
+## DistanceFromHome          1   1110.7 1132.7  9.331 0.0022531 ** 
+## Education                 1   1120.0 1142.0  0.000 0.9968618    
+## EnvironmentSatisfaction   1   1095.9 1117.9 24.108 9.107e-07 ***
+## Gender                    1   1118.4 1140.4  1.625 0.2023814    
+## HourlyRate                1   1120.0 1142.0  0.008 0.9271898    
+## JobInvolvement            1   1096.6 1118.6 23.354 1.347e-06 ***
+## JobLevel                  1   1118.2 1140.2  1.795 0.1803475    
+## JobSatisfaction           1   1100.5 1122.5 19.510 1.001e-05 ***
+## MaritalStatus             2   1080.0 1104.0 39.986 2.075e-09 ***
+## MonthlyIncome             1   1119.5 1141.5  0.541 0.4621085    
+## MonthlyRate               1   1119.3 1141.3  0.672 0.4124294    
+## NumCompaniesWorked        1   1109.8 1131.8 10.157 0.0014379 ** 
+## PercentSalaryHike         1   1119.7 1141.7  0.330 0.5654312    
+## PerformanceRating         1   1120.0 1142.0  0.004 0.9476485    
+## RelationshipSatisfaction  1   1115.1 1137.1  4.914 0.0266432 *  
+## StockOptionLevel          1   1088.9 1110.9 31.059 2.502e-08 ***
+## TotalWorkingYears         1   1112.0 1134.0  8.024 0.0046158 ** 
+## TrainingTimesLastYear     1   1115.2 1137.2  4.799 0.0284783 *  
+## WorkLifeBalance           1   1114.2 1136.2  5.744 0.0165497 *  
+## YearsAtCompany            1   1113.6 1135.6  6.369 0.0116105 *  
+## YearsInCurrentRole        1   1101.9 1123.9 18.090 2.108e-05 ***
+## YearsSinceLastPromotion   1   1118.9 1140.9  1.103 0.2936849    
+## YearsWithCurrManager      1   1105.0 1127.0 14.974 0.0001090 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+model.final <- update(lm.null, ~ . + OverTime + JobRole + MaritalStatus)
+summary(model.final)
+```
+
+```
+## 
+## Call:
+## glm(formula = Attrition ~ OverTime + JobRole + MaritalStatus, 
+##     family = binomial, data = workers)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.6865  -0.5564  -0.3805  -0.2124   3.0171  
+## 
+## Coefficients:
+##                               Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)                    -3.7803     0.4101  -9.217  < 2e-16 ***
+## OverTimeYes                     1.5353     0.1604   9.571  < 2e-16 ***
+## JobRoleHuman Resources          1.6861     0.4958   3.401 0.000673 ***
+## JobRoleLaboratory Technician    1.5671     0.3879   4.040 5.35e-05 ***
+## JobRoleManager                 -0.3655     0.5886  -0.621 0.534631    
+## JobRoleManufacturing Director  -0.0620     0.4905  -0.126 0.899422    
+## JobRoleResearch Director       -1.0657     0.8062  -1.322 0.186204    
+## JobRoleResearch Scientist       0.8024     0.3926   2.044 0.040970 *  
+## JobRoleSales Executive          1.0372     0.3868   2.681 0.007331 ** 
+## JobRoleSales Representative     2.2003     0.4330   5.082 3.73e-07 ***
+## MaritalStatusMarried            0.3051     0.2313   1.319 0.187217    
+## MaritalStatusSingle             1.1908     0.2299   5.179 2.23e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 1298.6  on 1469  degrees of freedom
+## Residual deviance: 1080.0  on 1458  degrees of freedom
+## AIC: 1104
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+```r
+# We can't discriminate against age, gender, or marital status, so let's control for those variables
+lm.base <- glm(Attrition ~ Age + Gender + MaritalStatus, data = workers, family = binomial)
+add1(lm.base, ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+```
+
+```
+## Single term additions
+## 
+## Model:
+## Attrition ~ Age + Gender + MaritalStatus
+##                          Df Deviance    AIC    LRT  Pr(>Chi)    
+## <none>                        1222.6 1232.6                     
+## BusinessTravel            2   1199.2 1213.2 23.325 8.610e-06 ***
+## DailyRate                 1   1220.0 1232.0  2.612 0.1060432    
+## Department                2   1212.4 1226.4 10.138 0.0062887 ** 
+## DistanceFromHome          1   1212.0 1224.0 10.555 0.0011585 ** 
+## Education                 1   1222.6 1234.6  0.007 0.9326941    
+## EnvironmentSatisfaction   1   1205.9 1217.9 16.702 4.373e-05 ***
+## HourlyRate                1   1222.6 1234.6  0.003 0.9595578    
+## JobInvolvement            1   1201.1 1213.1 21.463 3.608e-06 ***
+## JobLevel                  1   1204.1 1216.1 18.470 1.726e-05 ***
+## JobRole                   8   1166.6 1192.6 55.946 2.890e-09 ***
+## JobSatisfaction           1   1204.7 1216.7 17.851 2.389e-05 ***
+## MonthlyIncome             1   1206.0 1218.0 16.626 4.552e-05 ***
+## MonthlyRate               1   1222.3 1234.3  0.220 0.6393504    
+## NumCompaniesWorked        1   1208.2 1220.2 14.356 0.0001513 ***
+## OverTime                  1   1131.2 1143.2 91.422 < 2.2e-16 ***
+## PercentSalaryHike         1   1222.2 1234.2  0.320 0.5713181    
+## PerformanceRating         1   1222.6 1234.6  0.009 0.9230729    
+## RelationshipSatisfaction  1   1219.3 1231.3  3.233 0.0721800 .  
+## StockOptionLevel          1   1220.7 1232.7  1.916 0.1663436    
+## TotalWorkingYears         1   1208.0 1220.0 14.523 0.0001385 ***
+## TrainingTimesLastYear     1   1216.1 1228.1  6.497 0.0108036 *  
+## WorkLifeBalance           1   1215.3 1227.3  7.223 0.0071971 ** 
+## YearsAtCompany            1   1208.7 1220.7 13.862 0.0001967 ***
+## YearsInCurrentRole        1   1197.4 1209.4 25.151 5.300e-07 ***
+## YearsSinceLastPromotion   1   1222.4 1234.4  0.132 0.7160344    
+## YearsWithCurrManager      1   1197.6 1209.6 24.941 5.911e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+add1(update(lm.base, ~ . + OverTime), ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+```
+
+```
+## Single term additions
+## 
+## Model:
+## Attrition ~ Age + Gender + MaritalStatus + OverTime
+##                          Df Deviance    AIC    LRT  Pr(>Chi)    
+## <none>                        1131.2 1143.2                     
+## BusinessTravel            2   1111.0 1127.0 20.107 4.304e-05 ***
+## DailyRate                 1   1127.7 1141.7  3.411 0.0647456 .  
+## Department                2   1120.3 1136.3 10.834 0.0044394 ** 
+## DistanceFromHome          1   1120.5 1134.5 10.613 0.0011228 ** 
+## Education                 1   1131.0 1145.0  0.120 0.7285812    
+## EnvironmentSatisfaction   1   1107.5 1121.5 23.664 1.147e-06 ***
+## HourlyRate                1   1131.2 1145.2  0.004 0.9468355    
+## JobInvolvement            1   1108.8 1122.8 22.363 2.257e-06 ***
+## JobLevel                  1   1112.8 1126.8 18.333 1.854e-05 ***
+## JobRole                   8   1069.3 1097.3 61.875 1.995e-10 ***
+## JobSatisfaction           1   1109.2 1123.2 21.898 2.875e-06 ***
+## MonthlyIncome             1   1113.9 1127.9 17.277 3.231e-05 ***
+## MonthlyRate               1   1131.0 1145.0  0.166 0.6834899    
+## NumCompaniesWorked        1   1113.6 1127.6 17.555 2.790e-05 ***
+## PercentSalaryHike         1   1131.0 1145.0  0.205 0.6506802    
+## PerformanceRating         1   1131.2 1145.2  0.003 0.9566348    
+## RelationshipSatisfaction  1   1125.5 1139.5  5.703 0.0169333 *  
+## StockOptionLevel          1   1129.6 1143.6  1.575 0.2094264    
+## TotalWorkingYears         1   1116.5 1130.5 14.659 0.0001288 ***
+## TrainingTimesLastYear     1   1127.9 1141.9  3.251 0.0713969 .  
+## WorkLifeBalance           1   1124.2 1138.2  6.980 0.0082445 ** 
+## YearsAtCompany            1   1118.7 1132.7 12.432 0.0004220 ***
+## YearsInCurrentRole        1   1108.4 1122.4 22.792 1.805e-06 ***
+## YearsSinceLastPromotion   1   1130.9 1144.9  0.275 0.6003242    
+## YearsWithCurrManager      1   1109.0 1123.0 22.098 2.590e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+add1(update(lm.base, ~ . + OverTime + JobRole), ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+```
+
+```
+## Single term additions
+## 
+## Model:
+## Attrition ~ Age + Gender + MaritalStatus + OverTime + JobRole
+##                          Df Deviance    AIC     LRT  Pr(>Chi)    
+## <none>                        1069.3 1097.3                      
+## BusinessTravel            2   1050.9 1082.9 18.3701 0.0001026 ***
+## DailyRate                 1   1064.2 1094.2  5.0759 0.0242613 *  
+## Department                2   1067.7 1099.7  1.6309 0.4424341    
+## DistanceFromHome          1   1058.1 1088.1 11.1323 0.0008484 ***
+## Education                 1   1068.9 1098.9  0.3923 0.5311104    
+## EnvironmentSatisfaction   1   1045.1 1075.1 24.1794 8.777e-07 ***
+## HourlyRate                1   1069.3 1099.3  0.0042 0.9484610    
+## JobInvolvement            1   1048.5 1078.5 20.7580 5.211e-06 ***
+## JobLevel                  1   1069.2 1099.2  0.1287 0.7197758    
+## JobSatisfaction           1   1047.2 1077.2 22.0880 2.604e-06 ***
+## MonthlyIncome             1   1069.2 1099.2  0.0543 0.8157382    
+## MonthlyRate               1   1068.7 1098.7  0.6015 0.4380176    
+## NumCompaniesWorked        1   1049.1 1079.1 20.2215 6.897e-06 ***
+## PercentSalaryHike         1   1069.1 1099.1  0.2076 0.6486636    
+## PerformanceRating         1   1069.3 1099.3  0.0045 0.9463998    
+## RelationshipSatisfaction  1   1063.3 1093.3  5.9501 0.0147165 *  
+## StockOptionLevel          1   1067.0 1097.0  2.2954 0.1297609    
+## TotalWorkingYears         1   1068.2 1098.2  1.0663 0.3017853    
+## TrainingTimesLastYear     1   1064.3 1094.3  4.9261 0.0264534 *  
+## WorkLifeBalance           1   1062.1 1092.1  7.1352 0.0075586 ** 
+## YearsAtCompany            1   1066.2 1096.2  3.0602 0.0802341 .  
+## YearsInCurrentRole        1   1056.6 1086.6 12.6583 0.0003739 ***
+## YearsSinceLastPromotion   1   1066.2 1096.2  3.0832 0.0791047 .  
+## YearsWithCurrManager      1   1057.5 1087.5 11.7888 0.0005959 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+model.final.2 <- update(lm.base, ~ . + OverTime + JobRole + EnvironmentSatisfaction)
+summary(model.final.2)
+```
+
+```
+## 
+## Call:
+## glm(formula = Attrition ~ Age + Gender + MaritalStatus + OverTime + 
+##     JobRole + EnvironmentSatisfaction, family = binomial, data = workers)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.8470  -0.5715  -0.3758  -0.2000   3.0766  
+## 
+## Coefficients:
+##                                Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)                   -1.891518   0.601016  -3.147 0.001648 ** 
+## Age                           -0.028980   0.009861  -2.939 0.003296 ** 
+## GenderMale                     0.250129   0.165225   1.514 0.130058    
+## MaritalStatusMarried           0.268652   0.233933   1.148 0.250799    
+## MaritalStatusSingle            1.146676   0.233404   4.913 8.98e-07 ***
+## OverTimeYes                    1.665300   0.166374  10.009  < 2e-16 ***
+## JobRoleHuman Resources         1.516657   0.503973   3.009 0.002618 ** 
+## JobRoleLaboratory Technician   1.414419   0.395790   3.574 0.000352 ***
+## JobRoleManager                -0.148973   0.598496  -0.249 0.803429    
+## JobRoleManufacturing Director -0.007564   0.495556  -0.015 0.987821    
+## JobRoleResearch Director      -1.041467   0.812853  -1.281 0.200106    
+## JobRoleResearch Scientist      0.621194   0.401381   1.548 0.121708    
+## JobRoleSales Executive         0.947915   0.392021   2.418 0.015605 *  
+## JobRoleSales Representative    2.008432   0.445034   4.513 6.39e-06 ***
+## EnvironmentSatisfaction       -0.355094   0.072914  -4.870 1.12e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 1298.6  on 1469  degrees of freedom
+## Residual deviance: 1045.1  on 1455  degrees of freedom
+## AIC: 1075.1
 ## 
 ## Number of Fisher Scoring iterations: 6
 ```
