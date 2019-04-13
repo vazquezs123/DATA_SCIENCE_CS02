@@ -100,6 +100,7 @@ hexbinplot(DistanceFromHome ~ JobLevel | Attrition, attritionData,
 hexbinplot(JobLevel ~ HourlyRate | Attrition, attritionData,
            ylab="Job Level", xlab="Hourly Rate")
 
+
 # heatmap of Education related to Hourly Rate grouped by Attrition
 hexbinplot(as.integer(Education) ~ HourlyRate | Attrition, attritionData,
            ylab="Education", xlab="Hourly Rate")
@@ -160,50 +161,24 @@ ggplot(attritionData, aes(x = DistanceFromHome, y = Attrition, col=AgeGroups)) +
     labs(title = "Attrition Distance from home Age Group by Gender Plot") + facet_grid(. ~ Gender)
 ggsave("Attrition_DistanceFromHome_AgeGroup_Plot.png")
 
-ggplot(attritionData, aes(x = MaritalStatus, y = Attrition, col=AgeGroups)) +
-    geom_bar(stat = "identity", aes(fill=AgeGroups))  +
-    labs(title = "Attrition by Marital Status Plot") + facet_grid(. ~ Gender)
-ggsave("Attrition_DistanceFromHome_AgeGroup_Plot.png")
 
-ggplot(attritionData, aes(x = MaritalStatus, y = Age, col=Attrition)) +
-    geom_bar(stat = "identity", aes(fill=Attrition))  +
-    labs(title = "Age by Marital Status Plot") + facet_grid(. ~ Attrition)
-ggsave("Attrition_DistanceFromHome_AgeGroup_Plot.png")
 
-ggplot(attritionData, aes(x = MaritalStatus, y = MonthlyIncome, col=Attrition)) +
-    geom_bar(stat = "identity", aes(fill=Attrition))  +
-    labs(title = "Age by Marital Status Plot") + facet_grid(. ~ Attrition)
-ggsave("Attrition_MaritalStatus_MonthlyIncome_Plot.png")
 
-ggplot(attritionData, aes(x = Age, y = MonthlyIncome, col=MaritalStatus)) +
-    geom_point(stat = "identity", aes(fill=Attrition))  +
-    geom_line(stat = "identity", aes(fill=Attrition)) +
-    labs(title = "Monthly Income by Age Status Plot") 
-ggsave("Attrition_DistanceFromHome_Age_Plot.png")
+People retire, midlife crisis?
+WorklifeBalance
+People retire, midlife crisis?
+JobInvolvment/JobSatisfaction
+Are people bored? Are they engaged? Too much work?
+Years at company
+Do the longer people work at company deter them more from leaving?
+Job Role
+What jobs have the most people leaving? 
+Monthly Income
+Is there an average wage that causes people to leave?
+Gender
+Which gender is leaving more? 
 
-ggplot(attritionData, aes(x = Age, y = DistanceFromHome, col=Attrition)) +
-    geom_point(stat = "identity", aes(shape=Attrition), size=2)  +
-    geom_smooth(method=lm, aes(fill=Attrition)) +
-    labs(title = "Distance from Home by Age Plot") + facet_grid(. ~ MaritalStatus) 
-ggsave("Attrition_DistanceFromHome_Age_MaritalStatuslot.png")
 
-ggplot(attritionData, aes(x = Age, y = DistanceFromHome, col=Attrition)) +
-    geom_point(stat = "identity", aes(shape=Attrition), size=2)  +
-    geom_smooth(method=lm, aes(fill=Attrition)) +
-    labs(title = "Distance from Home by Age Plot") + facet_grid(. ~ Department) 
-ggsave("Attrition_DistanceFromHome_Age_Department_Plot.png")
-
-ggplot(attritionData, aes(x = Age, y = MonthlyIncome, col=Attrition)) +
-    geom_point(stat = "identity", aes(shape=Attrition), size=2)  +
-    geom_smooth(method=lm, aes(fill=Attrition)) +
-    labs(title = "MonthlyIncome by Age Plot") + facet_grid(. ~ EducationField) 
-ggsave("Attrition_MonthlyIncome_Age_EducationField_Plot.png")
-
-ggplot(attritionData, aes(x = DistanceFromHome, y = MonthlyIncome, col=Attrition)) +
-    geom_point(stat = "identity", aes(shape=Attrition), size=2)  +
-    geom_smooth(method=lm, aes(fill=Attrition)) +
-    labs(title = "MonthlyIncome by DistanceFromHome Plot") + facet_grid(. ~ EducationField) 
-ggsave("Attrition_MonthlyIncome_DistanceFromHome_EducationField_Plot.png")
 ```
 
 ## Including Plots
