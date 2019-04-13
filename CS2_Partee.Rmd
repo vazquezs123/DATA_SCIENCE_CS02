@@ -1,0 +1,61 @@
+---
+title: "CS2_Partee"
+author: "John Partee"
+date: "April 12, 2019"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r importAndFactor}
+library(openxlsx)
+cs2 <- read.xlsx("CaseStudy2.xlsx")
+
+cs2$Attrition <- as.factor(cs2$Attrition)
+cs2$BusinessTravel <- as.factor(cs2$BusinessTravel)
+cs2$Department <- as.factor(cs2$Department)
+cs2$EducationField <- as.factor(cs2$EducationField)
+cs2$Gender <- as.factor(cs2$Gender)
+cs2$JobRole <- as.factor(cs2$JobRole)
+cs2$Over18 <- as.factor(cs2$Over18)
+cs2$OverTime <- as.factor(cs2$OverTime)
+cs2$JobRole <- as.factor(cs2$JobRole)
+cs2$JobRole <- as.factor(cs2$JobRole)
+cs2$MaritalStatus <- as.factor(cs2$MaritalStatus)
+#remove "over18", "StandardHours", "EmployeeID", and "EmployeeCount" as they are not useful
+cs2 <- cs2[,c(-9,-10,-22,-27)]
+```
+
+
+```{r letsTryMLLoL}
+library(mlr)
+
+#seperate the set into training and test data
+cs2.train <- cs2[1:1000,]
+cs2.test <- cs2[1001:1470,]
+
+#make the tasks to train and test
+class.train <- makeClassifTask(data = cs2.train, target = "Attrition", positive = "Yes")
+class.test <- makeClassifTask(data = cs2.test, target = "Attrition", positive = "Yes")
+
+#normalize the features
+class.train <- normalizeFeatures(class.train, method="standardize")
+class.test <- normalizeFeatures(class.test, method="standardize")
+
+#make the learner
+class.learn <- makeLearner("classif.svm", predict.type = "prob")
+
+#train the model
+class.learn <- train(learner = class.learn, task = class.train)
+
+getLearnerModel(class.learn)
+
+#How did the model do?
+predicted <- predict(class.learn, class.test)
+performance(predicted)
+
+#What features matter?
+filterValues <- generateFilterValuesData(class.train, method = c("information.gain", "chi.squared"))
+plotFilterValues(filterValues, n.show = 16)
+```
