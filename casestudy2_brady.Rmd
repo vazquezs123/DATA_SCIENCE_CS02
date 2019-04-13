@@ -11,6 +11,7 @@ output:
 # Read in data
 workers <- read.csv("CaseStudy2-data.csv")
 names(workers)[1] <- "Age"
+workers2 <- workers
 # Create dummy variables
 businesstravel <- model.matrix(~0+BusinessTravel, data = workers)
 department <- model.matrix(~0+Department, data = workers)
@@ -38,4 +39,24 @@ for (i in 1:52) {
 model.full <- glm(Attrition ~ ., data = workers, family = binomial)
 model.step <- step(model.full)
 summary(model.step)
+```
+
+# Top three contributors?
+```{r}
+workers <- workers2
+# Overall three biggest contributors to attrition
+lm.null <- glm(Attrition ~ 1, data = workers, family = binomial)
+add1(lm.null, ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null, ~ . + OverTime), ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null, ~ . + OverTime + JobRole), ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+model.final <- update(lm.null, ~ . + OverTime + JobRole + MaritalStatus)
+summary(model.final)
+
+# We can't discriminate against age, gender, or marital status, so let's control for those variables
+lm.base <- glm(Attrition ~ Age + Gender + MaritalStatus, data = workers, family = binomial)
+add1(lm.base, ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.base, ~ . + OverTime), ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.base, ~ . + OverTime + JobRole), ~Age + BusinessTravel + DailyRate + Department + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobRole + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+model.final.2 <- update(lm.base, ~ . + OverTime + JobRole + EnvironmentSatisfaction)
+summary(model.final.2)
 ```
