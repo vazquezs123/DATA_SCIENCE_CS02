@@ -25,9 +25,9 @@ library(hexbin)
 attritionData <- read.xlsx("CaseStudy2-data.xlsx")
 
 # recode variables
-attritionYesCount <- length(attritionData$Attrition[attritionData$Attrition== "Yes"]) # 237
-attritionNoCount <- length(attritionData$Attrition[attritionData$Attrition== "No"]) # 1233
-attritionData$Attrition <- as.factor(attritionData$Attrition)
+attritionData$YesTotal <- length(attritionData$Attrition[as.character(attritionData$Attrition) == "Yes"]) # 237
+attritionData$NoTotal <- length(attritionData$Attrition[as.character(attritionData$Attrition) == "No"]) # 1233
+attritionData$Attrition <- factor(attritionData$Attrition)
 attritionData$Gender <- as.factor(attritionData$Gender)
 attritionData$Age <- as.integer(attritionData$Age)
 attritionData$JobRole <- as.factor(attritionData$JobRole)
@@ -59,12 +59,12 @@ attritionData$YearlyIncomeGroup <- cut(attritionData$YearlyIncome,
                                            method="quantile")[2])[,1],
                                          include.lowest=T,dig.lab=10)
 
-# Might not need these, but will leave for now. Should remove if not used by final clean up
-attritionMaleCount <- length(attritionData$Gender[attritionData$Gender=="Male"])
-attritionFemaleCount <- length(attritionData$Gender[attritionData$Gender == "Female"])
-attritionYesData <- attritionData[attritionData$Attrition == "Yes",]
-attritionYesMaleCount <- length(attritionYesData$Gender[attritionYesData$Gender=="Male"])
-attritionYesFemaleCount <- length(attritionYesData$Gender[attritionYesData$Gender == "Female"])
+attritionFemaleData <- as.data.frame(attritionData[as.character(attritionData$Gender) == "Female",])
+attritionData$FemaleTotal <- length(attritionFemaleData)
+attritionMaleData <- as.data.frame(attritionData[as.character(attritionData$Gender) == "Male",])
+attritionData$MaleTotal <- length(attritionMaleData)
+attritionData$YesFemaleTotal <- length(attritionData$Attrition[as.character(attritionData$Attrition) == "Yes" & as.character(attritionData$Gender) == "Female"]) 
+attritionData$YesMaleTotal <- length(attritionData$Attrition[as.character(attritionData$Attrition) == "Yes" & as.character(attritionData$Gender) == "Male"])
 
 # generate linear model and run stepwise-selection model method
 lm.full <- glm(Attrition ~ DistanceFromHome + Age + MonthlyIncome + Education + HourlyRate + HourlyRate + MonthlyIncome + PerformanceRating + WorkLifeBalance + 
@@ -76,11 +76,46 @@ model.aic.stepwise <- step(lm.null, direction="both", trace=1, scope = ~ Distanc
                              PerformanceRating + WorkLifeBalance + JobLevel + NumCompaniesWorked + YearsInCurrentRole + YearsInCurrentRole + YearlyIncomeGroup + DailyRate +
                              JobRole + StockOptionLevel + YearsSinceLastPromotion + Department + EnvironmentSatisfaction, data = attritionData, family = binomial)
 
+# show histograms of attrition based on different categories
+ggplot(attritionData,aes(JobLevel,fill=Attrition))+
+    geom_histogram(color="black", stat="count")+
+    labs(title="Job Level Attrition Histogram Plot",x="Job Level", y = "Frequency") + facet_grid(. ~ PerformanceRating)
+
+ggplot(attritionData,aes(JobLevel,fill=Attrition))+
+    geom_histogram(color="black", stat="count")+
+    labs(title="Job Level Attrition Histogram Plot",x="Job Level", y = "Frequency") + 
+
+# heatmap of Job Level related to Monthly Income grouped by Attrition
+hexbinplot(JobLevel ~ MonthlyIncome | Attrition, attritionData,
+           xlab="Monthly Income", ylab="Job Level", main="Job Level by Monthly Income")
+
+# heatmap of Job Level related to Monthly Income grouped by Attrition
+hexbinplot(JobLevel ~ PerformanceRating | Attrition, attritionData,
+           xlab="Performance Rating", ylab="Job Level", main="Job Level by Performance Rating")
+
+ggplot(attritionFemaleData, aes(x=Attrition, main="Female Attrition Histogram")) + 
+  geom_histogram(color="black", fill="lightpink", stat="count")+
+labs(title="Female Attrition Histogram Plot",x="Did they leave?", y = "Frequency")
+
+ggplot(attritionMaleData, aes(x=Attrition, main="Male Attrition Histogram")) + 
+  geom_histogram(color="black", fill="lightblue", stat="count")+
+labs(title="Male Attrition Histogram Plot",x="Did they leave?", y = "Frequency")
+
+# ~15% women leaving company
+length(attritionFemaleData$Attrition[attritionFemaleData$Attrition == "Yes"]) / length(attritionFemaleData$Attrition)
+length(attritionFemaleData$Attrition[attritionFemaleData$Attrition == "No"]) / length(attritionFemaleData$Attrition)
+
+# ~17% men leaving company
+length(attritionMaleData$Attrition[attritionMaleData$Attrition == "Yes"]) / length(attritionMaleData$Attrition)
+length(attritionMaleData$Attrition[attritionMaleData$Attrition == "No"]) / length(attritionMaleData$Attrition)
+
 # create scatter plot based model selection results
 # looking at: JobLevel, PerformanceRating, MonthlyIncome, HourlyRate, Department
-pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome+HourlyRate+Department,
+pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome,
       data=attritionData, main="Stepwise Variable Selection Matrix")
 
+pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome+HourlyRate+Department,
+      data=attritionData, main="Stepwise Variable Selection Matrix")
 
 bin<-hexbin(attritionData$MonthlyIncome, attritionData$Attrition, xbins=50) 
 plot(bin, main="Attrion Monthly Income HeatMap", xlab="Monthly Income", ylab="Attrition")
@@ -88,9 +123,6 @@ plot(bin, main="Attrion Monthly Income HeatMap", xlab="Monthly Income", ylab="At
 bin<-hexbin(attritionData$Age, attritionData$MonthlyIncome, xbins=50) 
 plot(bin, main="Attrion Monthly Income HeatMap")
 
-# heatmap of Job Level related to Monthly Income grouped by Attrition
-hexbinplot(JobLevel ~ MonthlyIncome | Attrition, attritionData,
-           xlab="Monthly Income", ylab="Job Level")
 
 # heatmap of Distance From Home related to Job Level grouped by Attrition
 hexbinplot(DistanceFromHome ~ JobLevel | Attrition, attritionData,
@@ -100,22 +132,21 @@ hexbinplot(DistanceFromHome ~ JobLevel | Attrition, attritionData,
 hexbinplot(JobLevel ~ HourlyRate | Attrition, attritionData,
            ylab="Job Level", xlab="Hourly Rate")
 
-
 # heatmap of Education related to Hourly Rate grouped by Attrition
 hexbinplot(as.integer(Education) ~ HourlyRate | Attrition, attritionData,
            ylab="Education", xlab="Hourly Rate")
 
-# create 
+ggplot(attritionData, aes(x = DistanceFromHome, y = Attrition, col=AgeGroups)) +
+    geom_bar(stat = "identity", aes(fill=AgeGroups))  +
+    labs(title = "Attrition Distance from home Age Group by Gender Plot") + facet_grid(. ~ Gender)
+ggsave("Attrition_DistanceFromHome_AgeGroup_Plot.png")
 
-library(lattice)
-splom(attritionData[])
-
-# stepwise regression
-fit <- lm(Attrition~Age+Education, data=attritionYesData)
-logitFunc <- glm(Attrition ~ Age + YearsInCurrentRole, data=attritionData)
-
-
-# does age have an impact on attrition
+# Look at Attrition and Gender
+## Attrition Barplot by Gender
+ggplot(attritionData, aes(x = Gender, y = Attrition, col=Attrition)) +
+    geom_bar(stat="identity", position="dodge")+
+    labs(title = "Attrition Age Group by GenderPlot")
+ggsave("Attrition_Age_plot.png", width = 20, height=20)
 
 ggplot(attritionData, aes(x = AgeGroups, y = Attrition)) +
     geom_bar(stat="identity")+
@@ -160,24 +191,6 @@ ggplot(attritionData, aes(x = DistanceFromHome, y = Attrition, col=AgeGroups)) +
     geom_bar(stat = "identity", aes(fill=AgeGroups))  +
     labs(title = "Attrition Distance from home Age Group by Gender Plot") + facet_grid(. ~ Gender)
 ggsave("Attrition_DistanceFromHome_AgeGroup_Plot.png")
-
-
-
-
-People retire, midlife crisis?
-WorklifeBalance
-People retire, midlife crisis?
-JobInvolvment/JobSatisfaction
-Are people bored? Are they engaged? Too much work?
-Years at company
-Do the longer people work at company deter them more from leaving?
-Job Role
-What jobs have the most people leaving? 
-Monthly Income
-Is there an average wage that causes people to leave?
-Gender
-Which gender is leaving more? 
-
 
 ```
 
