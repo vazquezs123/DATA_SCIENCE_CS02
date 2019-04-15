@@ -1,0 +1,54 @@
+---
+title: "High Turnover Positions"
+author: "Brady Arendale"
+date: "April 15, 2019"
+output: 
+  html_document:
+    keep_md: true
+---
+# What factors make sales representatives leave?
+```{r}
+# Read and subset the data
+workers <- read.csv("CaseStudy2-data.csv")
+names(workers)[1] <- "Age"
+salesRep <- workers[workers$JobRole == "Sales Representative",]
+# Forward selection logistic regression to find most important factors
+lm.null <- glm(Attrition ~ 1, data = salesRep, family = binomial)
+add1(lm.null, ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null,~ . + BusinessTravel), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null,~ . + BusinessTravel + OverTime), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null,~ . + BusinessTravel + OverTime + YearsInCurrentRole), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+summary(update(lm.null,~ . + BusinessTravel + OverTime + YearsInCurrentRole + JobSatisfaction))
+# Plot attrition factors
+library(ggplot2)
+ggplot(salesRep) + geom_bar(mapping = aes(x = BusinessTravel, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(salesRep) + geom_bar(mapping = aes(x = OverTime, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(salesRep) + geom_bar(mapping = aes(x = YearsInCurrentRole, fill = Attrition)) +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(salesRep) + geom_bar(mapping = aes(x = JobSatisfaction, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+```
+
+# What factors make laboratory technicians leave?
+```{r}
+# Subset the data
+labTech <- workers[workers$JobRole == "Laboratory Technician",]
+# Forward selection logistic regression to find most important factors
+lm.null <- glm(Attrition ~ 1, data = labTech, family = binomial)
+add1(lm.null, ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null, ~ . + OverTime), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null, ~ . + OverTime + YearsAtCompany), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null, ~ . + OverTime + YearsAtCompany + StockOptionLevel), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+summary(update(lm.null, ~ . + OverTime + YearsAtCompany + StockOptionLevel + EnvironmentSatisfaction))
+# Plot attrition factors
+ggplot(labTech) + geom_bar(mapping = aes(x = OverTime, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(labTech) + geom_bar(mapping = aes(x = YearsAtCompany, fill = Attrition)) +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(labTech) + geom_bar(mapping = aes(x = StockOptionLevel, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(labTech) + geom_bar(mapping = aes(x = EnvironmentSatisfaction, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+```
