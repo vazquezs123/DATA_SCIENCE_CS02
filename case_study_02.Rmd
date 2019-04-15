@@ -9,14 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
+## CASE STUDY 02 Plot Analysis
 ```{r }
-setwd("C:\\Users\\vazqu\\Documents\\SMU\\data_science\\CaseStudy2_2\\DATA_SCIENCE_CS02")
 library(openxlsx)
 library(MASS)
 library(ggplot2)
@@ -79,11 +73,7 @@ model.aic.stepwise <- step(lm.null, direction="both", trace=1, scope = ~ Distanc
 
 
 # create scatter plot based model selection results
-# looking at: JobLevel, PerformanceRating, MonthlyIncome, HourlyRate, Department
 pairs(~Attrition+JobRole+StockOptionLevel+EnvironmentSatisfaction,
-      data=attritionData, main="Stepwise Variable Selection Matrix")
-
-pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome+HourlyRate+Department,
       data=attritionData, main="Stepwise Variable Selection Matrix")
 
 pairs(~Attrition+JobRole+StockOptionLevel+ YearlyIncomeGroup + EnvironmentSatisfaction + DistanceFromHome + 
@@ -105,7 +95,7 @@ ggplot(attritionData,aes(StockOptionLevel,fill=Attrition))+
           axis.text.x = element_text(angle = 90, hjust = 1),
           plot.title = element_text(hjust = 0.5))
 
-attritionData$EnvironmentSatisfaction <- factor(attritionData$EnvironmentSatisfaction, 
+attritionData$EnvironmentSatisfaction <- factor(attritionData$EnvironmentSatisfaction,                                                 
                                                 labels=c("Low","Medium","High","Very High"))
 ggplot(attritionData,aes(EnvironmentSatisfaction,fill=Attrition))+
     geom_histogram(color="black", stat="count", position="dodge")+
@@ -113,6 +103,30 @@ ggplot(attritionData,aes(EnvironmentSatisfaction,fill=Attrition))+
     theme(panel.background = element_rect(fill = "#FDF8E2"),
           axis.text.x = element_text(angle = 90, hjust = 1),
           plot.title = element_text(hjust = 0.5))
+
+ggplot(attritionData,aes(YearsSinceLastPromotion,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Years Since Last Promotion Attrition Histogram Plot",
+         x="Years Since Last Promotion", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+    coord_cartesian(ylim=c(0, 150))
+
+ggplot(attritionData,aes(NumCompaniesWorked,Age, fill=Attrition))+
+    geom_point(stat="identity", aes(col=Attrition), size=5)+
+    labs(title="Age by Number of Companies Worked Plot",x="Number of Companies Worked", y = "Age")+
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          plot.title = element_text(hjust = 0.5))
+
+ggplot(attritionData,aes(YearlyIncomeGroup, fill=Attrition))+
+    geom_histogram(color="black", stat="count")+
+    labs(title="Yearly Income Group Attrition Histogram by Job Role Plot",
+         x="Yearly Income Group", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5))+
+    facet_grid(. ~ JobRole)
 
 attritionData$WorkLifeBalance <- factor(attritionData$WorkLifeBalance, labels=c("Bad","Good","Better","Best"))
 ggplot(attritionData,aes(YearsSinceLastPromotion,fill=Attrition))+
@@ -122,68 +136,23 @@ ggplot(attritionData,aes(YearsSinceLastPromotion,fill=Attrition))+
     theme(panel.background = element_rect(fill = "#FDF8E2"),
           axis.text.x = element_text(angle = 90, hjust = 1),
           plot.title = element_text(hjust = 0.5)) + 
-    facet_grid(. ~ WorkLifeBalance)
+    facet_grid(. ~ WorkLifeBalance)+
+    coord_cartesian(ylim=c(0, 75))
+    
+# heat maps
+hexbinplot(DistanceFromHome ~ Age | Attrition, attritionData,
+           xlab="Age", ylab="Distance From Home", 
+           main="Distance From Home by Age")
 
-ggplot(attritionData,aes(NumCompaniesWorked,fill=Attrition))+
-    geom_histogram(color="black", stat="count", position="dodge")+
-    labs(title="Years Since Last Promotion by Work Life Balance Attrition Histogram Plot",
-         x="Years Since Last Promotion", y = "Frequency") +
-    theme(panel.background = element_rect(fill = "#FDF8E2"),
-          axis.text.x = element_text(angle = 90, hjust = 1),
-          plot.title = element_text(hjust = 0.5)) + 
-    facet_grid(. ~ WorkLifeBalance)
+hexbinplot(JobLevel ~ MonthlyIncome | Attrition, attritionData,
+           ylab="Job Level", xlab="Monthly Income",
+           main="Job Level by Monthly Income")
 
-ggplot(attritionData,aes(JobRole,fill=Attrition))+
-    geom_histogram(color="black", stat="count", position="dodge")+
-    labs(title="Job Role Attrition Histogram by Environment Satisfaction Plot",x="Job Role", y = "Frequency") +
-    theme(panel.background = element_rect(fill = "#FDF8E2"),
-          axis.text.x = element_text(angle = 90, hjust = 1),
-          plot.title = element_text(hjust = 0.5))+
-    facet_grid(. ~ EnvironmentSatisfaction)
+hexbinplot(MonthlyIncome ~ Age | Attrition, attritionData,
+           ylab="Monthly Income", xlab="Age",
+           main="Monthly Income by Age")
 
-ggplot(attritionData,aes(YearlyIncomeGroup,YearsSinceLastPromotion,fill=Attrition))+
-    geom_point(stat="identity", position="dodge", aes(col=Attrition))+
-    labs(title="Years Since Last Promotion by Yearly Income Plot",x="Yearly Income", y = "Years Since Last Promotion") +
-    theme(panel.background = element_rect(fill = "#FDF8E2"),
-          axis.text.x = element_text(angle = 90, hjust = 1),
-          plot.title = element_text(hjust = 0.5))
-
-ggplot(attritionData,aes(JobLevel,fill=Attrition))+
-    geom_histogram(color="black", stat="count")+
-    labs(title="Job Level Attrition Histogram by Performance Rating Plot",x="Job Level", y = "Frequency") + 
-    facet_grid(. ~ PerformanceRating)
-
-ggplot(attritionData,aes(MonthlyIncomeGroup, fill=Attrition))+
-    geom_histogram(color="black", stat="count")+
-    labs(title="Job Level Attrition Histogram by Performance Rating Plot",x="Job Level", y = "Frequency") + 
-    facet_grid(. ~ JobLevel)
-
-gplot(attritionData,aes(NumCompaniesWorked,Age, fill=Attrition))+
-    geom_point(stat="identity", aes(col=Attrition), size=5)+
-    labs(title="Age by Number of Companies Worked Plot",x="Number of Companies Worked", y = "Age")+
-    theme(panel.background = element_rect(fill = "#FDF8E2"),
-          plot.title = element_text(hjust = 0.5))
-
-ggplot(attritionData,aes(YearlyIncomeGroup, fill=Attrition))+
-    geom_histogram(color="black", stat="count")+
-    labs(title="Yearly Income Class Attrition Histogram by Job Role Plot",
-         x="Yearly Income Group", y = "Frequency") +
-    theme(panel.background = element_rect(fill = "#FDF8E2"),
-          axis.text.x = element_text(angle = 90, hjust = 1),
-          plot.title = element_text(hjust = 0.5))+
-    facet_grid(. ~ JobRole)
-
-# heatmap of Job Level related to Monthly Income grouped by Attrition
-hexbinplot(NumCompaniesWorked ~ Age | Attrition, attritionData,
-           xlab="Monthly Income", ylab="Job Level", main="Job Level by Monthly Income")
-
-# heatmap of Job Level related to Monthly Income grouped by Attrition
-hexbinplot(JobLevel ~ PerformanceRating | Attrition, attritionData,
-           xlab="Performance Rating", ylab="Job Level", main="Job Level by Performance Rating")
-
-sort(unique(attritionData$YearlyIncomeGroup))
-
-
+# Look at Attrition and Gender
 ggplot(attritionFemaleData, aes(x=Attrition, main="Female Attrition Histogram")) + 
   geom_histogram(color="black", fill="lightpink", stat="count")+
 labs(title="Female Attrition Histogram Plot",x="Did they leave?", y = "Frequency")
@@ -199,91 +168,4 @@ length(attritionFemaleData$Attrition[attritionFemaleData$Attrition == "No"]) / l
 # ~17% men leaving company
 length(attritionMaleData$Attrition[attritionMaleData$Attrition == "Yes"]) / length(attritionMaleData$Attrition)
 length(attritionMaleData$Attrition[attritionMaleData$Attrition == "No"]) / length(attritionMaleData$Attrition)
-
-
-bin<-hexbin(attritionData$MonthlyIncome, attritionData$Attrition, xbins=50) 
-plot(bin, main="Attrion Monthly Income HeatMap", xlab="Monthly Income", ylab="Attrition")
-
-bin<-hexbin(attritionData$Age, attritionData$YearlyIncomeGroup) 
-plot(bin, main="Attrion Monthly Income HeatMap")
-
-
-# heatmap of Distance From Home related to Job Level grouped by Attrition
-hexbinplot(DistanceFromHome ~ JobLevel | Attrition, attritionData,
-           ylab="Distance from Home", xlab="Job Level")
-
-# heatmap of Job Level related to Hourly Rate grouped by Attrition
-hexbinplot(JobLevel ~ HourlyRate | Attrition, attritionData,
-           ylab="Job Level", xlab="Hourly Rate")
-
-# heatmap of Education related to Hourly Rate grouped by Attrition
-hexbinplot(as.integer(Education) ~ HourlyRate | Attrition, attritionData,
-           ylab="Education", xlab="Hourly Rate")
-
-ggplot(attritionData, aes(x = DistanceFromHome, y = Attrition, col=AgeGroups)) +
-    geom_bar(stat = "identity", aes(fill=AgeGroups))  +
-    labs(title = "Attrition Distance from home Age Group by Gender Plot") + facet_grid(. ~ Gender)
-ggsave("Attrition_DistanceFromHome_AgeGroup_Plot.png")
-
-# Look at Attrition and Gender
-## Attrition Barplot by Gender
-ggplot(attritionData, aes(x = Gender, y = Attrition, col=Attrition)) +
-    geom_bar(stat="identity", position="dodge")+
-    labs(title = "Attrition Age Group by GenderPlot")
-ggsave("Attrition_Age_plot.png", width = 20, height=20)
-
-ggplot(attritionData, aes(x = AgeGroups, y = Attrition)) +
-    geom_bar(stat="identity")+
-    labs(title = "Attrition Age Group by GenderPlot") + facet_grid(. ~ Gender)
-ggsave("Attrition_Age_plot.png", width = 20, height=20)
-
-ggplot(attritionData, aes(x = WorkLifeBalance, y = Attrition, col=JobRole)) +
-    geom_bar(stat = "identity", aes(fill = JobRole)) +
-    theme(panel.background = element_rect(fill = "#FDF8E2"),
-          axis.text.x = element_text(angle = 90, hjust = 1),
-          plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Attrition Work Life Balance by Work Life Balance Plot") + facet_grid(. ~ Gender)
-ggsave("Attrition_WorkLifeBalance_Plot.png", width = 20, height=20)
-
-ggplot(attritionData, aes(x = WorkLifeBalance, y = Attrition, col=JobRole)) +
-    geom_bar(stat = "identity", aes(fill = JobRole)) +
-    theme(panel.background = element_rect(fill = "#FDF8E2"),
-          axis.text.x = element_text(angle = 90, hjust = 1),
-          plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Attrition Work Life Balance by Work Life Balance Plot") + facet_grid(. ~ Gender)
-ggsave("Attrition_WorkLifeBalance_Plot.png", width = 20, height=20)
-
-ggplot(attritionData, aes(x = MonthlyIncomeGroup, y = Attrition, fill=Gender)) +
-    geom_bar(stat = "identity", position="dodge") +
-    labs(title = "Attrition Monthly Income Plot")
-ggsave("Attrition_MonthlyIncome_Plot.png", width = 20, height=20)
-
-ggplot(attritionData, aes(x = MaritalStatus, y = Attrition, fill=factor(JobRole))) +
-    geom_bar(stat = "identity", position="dodge") +
-    theme(panel.background = element_rect(fill = "#FDF8E2"),
-          axis.text.x = element_text(angle = 0, hjust = 1),
-          plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Attrition Gender Marital Status Plot") 
-ggsave("Attrition_Gender_MaritalStatus_Plot.png", width = 20, height=20)
-
-ggplot(attritionData, aes(x = MonthlyIncomeGroup, y = Attrition, col=AgeGroups)) +
-    geom_bar(stat = "identity", aes(fill=AgeGroups))  +
-    labs(title = "Attrition Monthly Income Age Group by Gender Plot") + facet_grid(. ~ Gender)
-ggsave("Attrition_MonthlyIncome_AgeGroup_Plot.png")
-
-ggplot(attritionData, aes(x = DistanceFromHome, y = Attrition, col=AgeGroups)) +
-    geom_bar(stat = "identity", aes(fill=AgeGroups))  +
-    labs(title = "Attrition Distance from home Age Group by Gender Plot") + facet_grid(. ~ Gender)
-ggsave("Attrition_DistanceFromHome_AgeGroup_Plot.png")
-
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
