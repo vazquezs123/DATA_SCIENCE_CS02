@@ -50,14 +50,15 @@ attritionData$MonthlyIncomeGroup <-cut(attritionData$MonthlyIncome,
                                            method="quantile")[2])[,1],
                                          include.lowest=T,dig.lab=10)
 
-# derive annual income and classify into income group
+# derive annual income and classify into income group based on quantiles 367/368 group
 attritionData$YearlyIncome <- attritionData$MonthlyIncome*12
 attritionData$YearlyIncomeGroup <- cut(attritionData$YearlyIncome, 
                                        breaks=data.frame(
-                                         classIntervals(
-                                           attritionData$YearlyIncome, n=5,
-                                           method="quantile")[2])[,1],
-                                         include.lowest=T,dig.lab=10)
+                                           classIntervals(
+                                               attritionData$YearlyIncome, n=4,
+                                               method="quantile")[2])[,1],
+                                       include.lowest=T,dig.lab=10, labels = c('lower','lower-middle','upper-middle','upper'))
+
 
 attritionFemaleData <- as.data.frame(attritionData[as.character(attritionData$Gender) == "Female",])
 attritionData$FemaleTotal <- length(attritionFemaleData)
@@ -76,22 +77,96 @@ model.aic.stepwise <- step(lm.null, direction="both", trace=1, scope = ~ Distanc
                              PerformanceRating + WorkLifeBalance + JobLevel + NumCompaniesWorked + YearsInCurrentRole + YearsInCurrentRole + YearlyIncomeGroup + DailyRate +
                              JobRole + StockOptionLevel + YearsSinceLastPromotion + Department + EnvironmentSatisfaction, data = attritionData, family = binomial)
 
+
+# create scatter plot based model selection results
+# looking at: JobLevel, PerformanceRating, MonthlyIncome, HourlyRate, Department
+pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome,
+      data=attritionData, main="Stepwise Variable Selection Matrix")
+
+pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome+HourlyRate+Department,
+      data=attritionData, main="Stepwise Variable Selection Matrix")
+
+pairs(~Attrition+JobRole+StockOptionLevel+ YearlyIncomeGroup + EnvironmentSatisfaction + DistanceFromHome + 
+        NumCompaniesWorked + Age + YearsInCurrentRole + YearsSinceLastPromotion + WorkLifeBalance + DailyRate,
+      data=attritionData, main="Stepwise Variable Selection Matrix")
+
 # show histograms of attrition based on different categories
-ggplot(attritionData,aes(JobLevel,fill=Attrition))+
-    geom_histogram(color="black", stat="count")+
-    labs(title="Job Level Attrition Histogram Plot",x="Job Level", y = "Frequency") + facet_grid(. ~ PerformanceRating)
+ggplot(attritionData,aes(JobRole,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Job Role Attrition Histogram Plot",x="Job Level", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5))
+
+levels(attritionData$WorkLifeBalance) <- c("Bad","Good","Better","Best")
+ggplot(attritionData,aes(YearsSinceLastPromotion,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Years Since Last Promotion by Work Life Balance Attrition Histogram Plot",
+         x="Years Since Last Promotion", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) + 
+    facet_grid(. ~ WorkLifeBalance)
+
+ggplot(attritionData,aes(NumCompaniesWorked,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Years Since Last Promotion by Work Life Balance Attrition Histogram Plot",
+         x="Years Since Last Promotion", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) + 
+    facet_grid(. ~ WorkLifeBalance)
+
+ggplot(attritionData,aes(JobRole,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Job Role Attrition Histogram by Environment Satisfaction Plot",x="Job Role", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5))+
+    facet_grid(. ~ EnvironmentSatisfaction)
+
+ggplot(attritionData,aes(YearlyIncome,YearsSinceLastPromotion,fill=Attrition))+
+    geom_point(stat="identity", position="dodge", aes(col=Attrition))+
+    labs(title="Years Since Last Promotion by Yearly Income Plot",x="Yearly Income", y = "Years Since Last Promotion") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5))
 
 ggplot(attritionData,aes(JobLevel,fill=Attrition))+
     geom_histogram(color="black", stat="count")+
-    labs(title="Job Level Attrition Histogram Plot",x="Job Level", y = "Frequency") + 
+    labs(title="Job Level Attrition Histogram by Performance Rating Plot",x="Job Level", y = "Frequency") + 
+    facet_grid(. ~ PerformanceRating)
+
+ggplot(attritionData,aes(MonthlyIncomeGroup, fill=Attrition))+
+    geom_histogram(color="black", stat="count")+
+    labs(title="Job Level Attrition Histogram by Performance Rating Plot",x="Job Level", y = "Frequency") + 
+    facet_grid(. ~ JobLevel)
+
+gplot(attritionData,aes(NumCompaniesWorked,Age, fill=Attrition))+
+    geom_point(stat="identity", aes(col=Attrition), size=5)+
+    labs(title="Age by Number of Companies Worked Plot",x="Number of Companies Worked", y = "Age")+
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          plot.title = element_text(hjust = 0.5))
+
+ggplot(attritionData,aes(YearlyIncomeGroup, fill=Attrition))+
+    geom_histogram(color="black", stat="count")+
+    labs(title="Yearly Income Class Attrition Histogram by Job Role Plot",
+         x="Yearly Income Group", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5))+
+    facet_grid(. ~ JobRole)
 
 # heatmap of Job Level related to Monthly Income grouped by Attrition
-hexbinplot(JobLevel ~ MonthlyIncome | Attrition, attritionData,
+hexbinplot(NumCompaniesWorked ~ Age | Attrition, attritionData,
            xlab="Monthly Income", ylab="Job Level", main="Job Level by Monthly Income")
 
 # heatmap of Job Level related to Monthly Income grouped by Attrition
 hexbinplot(JobLevel ~ PerformanceRating | Attrition, attritionData,
            xlab="Performance Rating", ylab="Job Level", main="Job Level by Performance Rating")
+
+sort(unique(attritionData$YearlyIncomeGroup))
+
 
 ggplot(attritionFemaleData, aes(x=Attrition, main="Female Attrition Histogram")) + 
   geom_histogram(color="black", fill="lightpink", stat="count")+
@@ -109,13 +184,6 @@ length(attritionFemaleData$Attrition[attritionFemaleData$Attrition == "No"]) / l
 length(attritionMaleData$Attrition[attritionMaleData$Attrition == "Yes"]) / length(attritionMaleData$Attrition)
 length(attritionMaleData$Attrition[attritionMaleData$Attrition == "No"]) / length(attritionMaleData$Attrition)
 
-# create scatter plot based model selection results
-# looking at: JobLevel, PerformanceRating, MonthlyIncome, HourlyRate, Department
-pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome,
-      data=attritionData, main="Stepwise Variable Selection Matrix")
-
-pairs(~Attrition+JobLevel+PerformanceRating+MonthlyIncome+HourlyRate+Department,
-      data=attritionData, main="Stepwise Variable Selection Matrix")
 
 bin<-hexbin(attritionData$MonthlyIncome, attritionData$Attrition, xbins=50) 
 plot(bin, main="Attrion Monthly Income HeatMap", xlab="Monthly Income", ylab="Attrition")
