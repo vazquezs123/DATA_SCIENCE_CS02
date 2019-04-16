@@ -1,0 +1,259 @@
+---
+title: "What Factors Lead to Employee Attrition? - An Exploratory Data Analysis"
+author: "Team Greco-Roman"
+date: "April 15, 2019"
+output: 
+  html_document:
+    keep_md: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+# Introduction
+
+DDSAnalytics, an analytics company that specializes in talent management solutions for Fortune 1000 companies, is launching a product designed to predict employee turnover. They asked us for help in identifying the key factors leading to attrition. They provided us with an existing dataset of employee data, and we performed an exploratory data analysis to determine what factors are associated with attrition.
+
+# What factors are statistically significant for attrition?
+
+To test this, we ran two-sample t-tests for each factor against attrition. We created dummy variables for each categorical variable so we could test each value separately. Note that we did not include an adjustment for multiple comparisons.
+
+```{r T-test}
+# Read in the data and adjust classes
+library("openxlsx")
+workers <- read.xlsx("CaseStudy2-data.xlsx")
+workers$Attrition <- as.factor(workers$Attrition)
+workers$BusinessTravel <- as.factor(workers$BusinessTravel)
+workers$Department <- as.factor(workers$Department)
+workers$EducationField <- as.factor(workers$EducationField)
+workers$Gender <- as.factor(workers$Gender)
+workers$JobRole <- as.factor(workers$JobRole)
+workers$Over18 <- as.factor(workers$Over18)
+workers$OverTime <- as.factor(workers$OverTime)
+workers$JobRole <- as.factor(workers$JobRole)
+workers$JobRole <- as.factor(workers$JobRole)
+workers$MaritalStatus <- as.factor(workers$MaritalStatus)
+# Remove "Over18", "StandardHours", "EmployeeID", and "EmployeeCount" as they are not useful
+workers <- workers[,c(-9,-10,-22,-27)]
+# Create dummy variables
+businesstravel <- model.matrix(~0+BusinessTravel, data = workers)
+department <- model.matrix(~0+Department, data = workers)
+educationfield <- model.matrix(~0+EducationField, data = workers)
+gender <- model.matrix(~0+Gender, data = workers)
+jobrole <- model.matrix(~0+JobRole, data = workers)
+maritalstatus <- model.matrix(~0+MaritalStatus, data = workers)
+overtime <- model.matrix(~0+OverTime, data = workers)
+workers <- data.frame(workers, businesstravel, department, educationfield, gender, jobrole, maritalstatus, overtime)
+# Run t-test for each variable on attrition
+for (i in c(1, 4, 6:7, 9, 11:13, 15, 17:19, 21:59)) {
+  print(names(workers)[i])
+  print(t.test(workers[,i] ~ Attrition, data = workers))
+}
+```
+
+# What are the attrition rates for each factor?
+
+To examine how much influence each factor has over attrition, we created tables for various factors versus attrition and calculated the attrition rate for each variable. We found that the overall attrition rate for this dataset was 16.1%. Any large deviations from that number should give us an idea of where to concentrate our efforts.
+
+```{r Attrition Tables, results='asis'}
+library(knitr)
+library(reshape2)
+paste("Overall attrition rate: ", round(table(workers$Attrition)[2]/1470, digits = 3)*100, "%", sep = "")
+for (i in c(3, 5, 8:10, 12:16, 20, 22, 24, 26:27)) {
+  attrTable <- as.data.frame(table(workers[,i], workers$Attrition))
+  attrTable <- dcast(attrTable, Var1 ~ Var2, value.var = "Freq")
+  names(attrTable)[1] <- names(workers)[i]
+  attrTable$AttrRate <- attrTable$Yes/(attrTable$Yes+attrTable$No)
+  print(kable(attrTable))
+}
+```
+
+# Visualization of attrition rates
+
+We graphed attrition rates for various factors. The horizontal lines in the bar graphs shows the overall attrition rate of 16.1%.
+
+```{r}
+library(ggplot2)
+ggplot(workers) + geom_bar(mapping = aes(x = BusinessTravel, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(workers) + geom_bar(mapping = aes(x = Department, fill = Attrition), position = "fill") + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(workers) + geom_bar(mapping = aes(x = EducationField, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(workers) + geom_bar(mapping = aes(x = Gender, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(workers) + geom_bar(mapping = aes(x = JobRole, fill = Attrition), position = "fill") + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + 
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90, hjust = 1))
+ggplot(workers) + geom_bar(mapping = aes(x = MaritalStatus, fill = Attrition), position = "fill") + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(workers) + geom_bar(mapping = aes(x = OverTime, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(workers) + geom_boxplot(mapping = aes(x = Attrition, y = MonthlyIncome))
+```
+
+# Creating a predictive model
+
+We decided to use machine learning to find the three most important factors leading to attrition. We trained a support-vector machine (SVM) model to determine what factors were most associated with attrition. We determined that the top three factors were overtime, job role, and years at company. The model predicted attrition on the test data with 83.7% accuracy.
+
+```{r initialModel}
+library(mlr)
+library(kernlab)
+
+# Remove dummy variables since we no longer need them
+#workers <- workers[,1:31]
+
+#seperate the set into training and test data
+set.seed(1)
+train.sample <- sample(1470, 0.8*1470)
+workers.train<-workers[train.sample,-c(32:59)]
+workers.test<-workers[-train.sample,-c(32:59)]
+
+#make the tasks to train and test
+class.train <- makeClassifTask(data = workers.train, target = "Attrition", positive = "Yes")
+class.test <- makeClassifTask(data = workers.test, target = "Attrition", positive = "Yes")
+
+#normalize the features
+class.train <- normalizeFeatures(class.train, method="standardize")
+class.test <- normalizeFeatures(class.test, method="standardize")
+
+#make the learner
+class.learn <- makeLearner("classif.ksvm", predict.type = "prob")
+
+#Tune the Hyperparameters
+ps = makeParamSet(
+  makeDiscreteParam("C", values = 2^(-4:4)),
+  makeDiscreteParam("sigma", values = 2^(-4:4))
+)
+ctrl = makeTuneControlRandom(maxit = 20)
+rdesc = makeResampleDesc("CV", iters = 3L)
+res = tuneParams("classif.ksvm", task = class.train, resampling = rdesc, par.set = ps, control = ctrl)
+class.learn <- setHyperPars(class.learn, par.vals = res$x)
+
+#train the model
+class.learn <- train(learner = class.learn, task = class.train)
+
+#How did the model do?
+predicted <- predict(class.learn, class.test)
+performance(predicted, acc)
+
+#plot it
+learningCurve <- generateLearningCurveData("classif.ksvm", class.train, percs = seq(0.05, 1, by = 0.05), measures = list(tp, fn, acc, mmce))
+plotLearningCurve(learningCurve)
+
+#What features matter?
+filterValues <- generateFilterValuesData(class.train, method = c("information.gain", "chi.squared"))
+plotFilterValues(filterValues, n.show = 16)
+
+#What does this tell us?
+head(predicted$data)
+```
+
+# Controlling for discrimination
+
+To ensure we were not unintentionally discriminating on the basis of age, gender, or marital status, we removed these factors and trained another SVM model. The top three factors in this model were job role, overtime, and monthly income. The new model predicted attrition on the test set with an 89.8% accuracy.
+
+```{r legalModel}
+#seperate the set into training and test data
+train.sample <- sample(1470, 0.8*1470)
+workers.train <- workers[train.sample,-c(1, 10, 16, 32:59)]
+workers.test <- workers[-train.sample,-c(1, 10, 16, 32:59)]
+
+#make the tasks to train and test
+legal.train <- makeClassifTask(data = workers.train, target = "Attrition", positive = "Yes")
+legal.test <- makeClassifTask(data = workers.test, target = "Attrition", positive = "Yes")
+
+#normalize the features
+legal.train <- normalizeFeatures(legal.train, method="standardize")
+legal.test <- normalizeFeatures(legal.test, method="standardize")
+
+#make the learner
+legal.learn <- makeLearner("classif.ksvm", predict.type = "prob")
+
+#Tune the Hyperparameters
+ps = makeParamSet(
+  makeDiscreteParam("C", values = 2^(-4:4)),
+  makeDiscreteParam("sigma", values = 2^(-4:4))
+)
+ctrl = makeTuneControlRandom(maxit = 20)
+rdesc = makeResampleDesc("CV", iters = 3L)
+res = tuneParams("classif.ksvm", task = legal.train, resampling = rdesc, par.set = ps, control = ctrl)
+legal.learn <- setHyperPars(legal.learn, par.vals = res$x)
+
+#train the model
+legal.learn <- train(learner = legal.learn, task = legal.train)
+
+#How did the model do?
+predicted <- predict(legal.learn, legal.test)
+performance(predicted, acc)
+
+#Plot that:
+learningCurve2 <- generateLearningCurveData("classif.ksvm", legal.train, percs = seq(0.05, 1, by = 0.05), measures = list(tp, fn, acc, mmce))
+plotLearningCurve(learningCurve2)
+
+#What features matter?
+filterValues2 <- generateFilterValuesData(legal.train, method = c("information.gain", "chi.squared"))
+plotFilterValues(filterValues2, n.show = 16)
+
+#What does this tell us?
+head(predicted$data)
+```
+
+# What factors lead to high attrition for sales representatives?
+
+We were interested in figuring out what factors led to sales representatives having a particularly high attrition rate. Using a forward selection logistic regression model, we found that the top four factors associated with attrition for sales representatives were business travel, overtime, years in current role, and job satisfaction.
+
+```{r SalesRep}
+# Subset the data
+salesRep <- workers[workers$JobRole == "Sales Representative",]
+# Forward selection logistic regression to find most important factors
+lm.null <- glm(Attrition ~ 1, data = salesRep, family = binomial)
+add1(lm.null, ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null,~ . + BusinessTravel), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null,~ . + BusinessTravel + OverTime), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null,~ . + BusinessTravel + OverTime + YearsInCurrentRole), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+summary(update(lm.null,~ . + BusinessTravel + OverTime + YearsInCurrentRole + JobSatisfaction))
+```
+
+## Visualization of sales representative attrition
+
+```{r SalesRep Viz}
+# Plot attrition factors
+ggplot(salesRep) + geom_bar(mapping = aes(x = BusinessTravel, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(salesRep) + geom_bar(mapping = aes(x = OverTime, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(salesRep) + geom_bar(mapping = aes(x = YearsInCurrentRole, fill = Attrition)) +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(salesRep) + geom_bar(mapping = aes(x = JobSatisfaction, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+```
+
+# What factors lead to high attrition for laboratory technicians?
+
+Like the sales representatives, we wanted to identify the top factors leading to attrition for laboratory technicians. Again, we ran a forward selection logistic regression model. We found that the top four factors associated with attrition for laboratory technicians were
+
+```{r LabTech}
+# Subset the data
+labTech <- workers[workers$JobRole == "Laboratory Technician",]
+# Forward selection logistic regression to find most important factors
+lm.null <- glm(Attrition ~ 1, data = labTech, family = binomial)
+add1(lm.null, ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null, ~ . + OverTime), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null, ~ . + OverTime + YearsAtCompany), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+add1(update(lm.null, ~ . + OverTime + YearsAtCompany + StockOptionLevel), ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education + EnvironmentSatisfaction + Gender + HourlyRate + JobInvolvement + JobLevel + JobSatisfaction + MaritalStatus + MonthlyIncome + MonthlyRate + NumCompaniesWorked + OverTime + PercentSalaryHike + PerformanceRating + RelationshipSatisfaction + StockOptionLevel + TotalWorkingYears + TrainingTimesLastYear + WorkLifeBalance + YearsAtCompany + YearsInCurrentRole + YearsSinceLastPromotion + YearsWithCurrManager, test = "LRT")
+summary(update(lm.null, ~ . + OverTime + YearsAtCompany + StockOptionLevel + EnvironmentSatisfaction))
+```
+
+## Visualization of laboratory technician attrition
+
+```{r LabTech Viz}
+# Plot attrition factors
+ggplot(labTech) + geom_bar(mapping = aes(x = OverTime, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(labTech) + geom_bar(mapping = aes(x = YearsAtCompany, fill = Attrition)) +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(labTech) + geom_bar(mapping = aes(x = StockOptionLevel, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(labTech) + geom_bar(mapping = aes(x = EnvironmentSatisfaction, fill = Attrition), position = "fill") +
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+```

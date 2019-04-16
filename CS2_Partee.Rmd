@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ```{r importAndFactor}
 library(openxlsx)
-cs2 <- read.xlsx("CaseStudy2.xlsx")
+cs2 <- read.xlsx("CaseStudy2-data.xlsx")
 
 cs2$Attrition <- as.factor(cs2$Attrition)
 cs2$BusinessTravel <- as.factor(cs2$BusinessTravel)
