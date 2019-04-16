@@ -1,0 +1,128 @@
+---
+title: "CS2_Partee"
+author: "John Partee"
+date: "April 12, 2019"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r importAndFactor}
+library(openxlsx)
+cs2 <- read.xlsx("CaseStudy2.xlsx")
+
+cs2$Attrition <- as.factor(cs2$Attrition)
+cs2$BusinessTravel <- as.factor(cs2$BusinessTravel)
+cs2$Department <- as.factor(cs2$Department)
+cs2$EducationField <- as.factor(cs2$EducationField)
+cs2$Gender <- as.factor(cs2$Gender)
+cs2$JobRole <- as.factor(cs2$JobRole)
+cs2$Over18 <- as.factor(cs2$Over18)
+cs2$OverTime <- as.factor(cs2$OverTime)
+cs2$JobRole <- as.factor(cs2$JobRole)
+cs2$JobRole <- as.factor(cs2$JobRole)
+cs2$MaritalStatus <- as.factor(cs2$MaritalStatus)
+#remove "over18", "StandardHours", "EmployeeID", and "EmployeeCount" as they are not useful
+cs2 <- cs2[,c(-9,-10,-22,-27)]
+```
+
+#Model with everything maybe meaningful:
+```{r initialModel}
+library(mlr)
+library(kernlab)
+
+#seperate the set into training and test data
+cs2.train <- cs2[1:1000,]
+cs2.test <- cs2[1001:1470,]
+
+#make the tasks to train and test
+class.train <- makeClassifTask(data = cs2.train, target = "Attrition", positive = "Yes")
+class.test <- makeClassifTask(data = cs2.test, target = "Attrition", positive = "Yes")
+
+#normalize the features
+class.train <- normalizeFeatures(class.train, method="standardize")
+class.test <- normalizeFeatures(class.test, method="standardize")
+
+#make the learner
+class.learn <- makeLearner("classif.ksvm", predict.type = "prob")
+
+#Tune the Hyperparameters
+ps = makeParamSet(
+  makeDiscreteParam("C", values = 2^(-4:4)),
+  makeDiscreteParam("sigma", values = 2^(-4:4))
+)
+ctrl = makeTuneControlRandom(maxit = 20)
+rdesc = makeResampleDesc("CV", iters = 3L)
+res = tuneParams("classif.ksvm", task = class.train, resampling = rdesc, par.set = ps, control = ctrl)
+class.learn <- setHyperPars(class.learn, par.vals = res$x)
+
+#train the model
+class.learn <- train(learner = class.learn, task = class.train)
+
+#How did the model do?
+predicted <- predict(class.learn, class.test)
+performance(predicted, acc)
+#nearly 90%! Not bad...
+
+#plot it
+learningCurve <- generateLearningCurveData("classif.ksvm", class.train, percs = seq(0.05, 1, by = 0.05), measures = list(tp, fn, acc, mmce))
+plotLearningCurve(learningCurve)
+
+#What features matter?
+filterValues <- generateFilterValuesData(class.train, method = c("information.gain", "chi.squared"))
+plotFilterValues(filterValues, n.show = 16)
+
+#What does this tell us?
+head(predicted$data)
+```
+
+#And the model with no illegal discrimination:
+```{r legalModel}
+#remove the illegal features
+cs2 <- cs2[,c(-1, -12, -18)]
+
+#seperate the set into training and test data
+cs2.train <- cs2[1:1000,]
+cs2.test <- cs2[1001:1470,]
+
+#make the tasks to train and test
+legal.train <- makeClassifTask(data = cs2.train, target = "Attrition", positive = "Yes")
+legal.test <- makeClassifTask(data = cs2.test, target = "Attrition", positive = "Yes")
+
+#normalize the features
+legal.train <- normalizeFeatures(legal.train, method="standardize")
+legal.test <- normalizeFeatures(legal.test, method="standardize")
+
+#make the learner
+legal.learn <- makeLearner("classif.ksvm", predict.type = "prob")
+
+#Tune the Hyperparameters
+ps = makeParamSet(
+  makeDiscreteParam("C", values = 2^(-4:4)),
+  makeDiscreteParam("sigma", values = 2^(-4:4))
+)
+ctrl = makeTuneControlRandom(maxit = 20)
+rdesc = makeResampleDesc("CV", iters = 3L)
+res = tuneParams("classif.ksvm", task = legal.train, resampling = rdesc, par.set = ps, control = ctrl)
+legal.learn <- setHyperPars(legal.learn, par.vals = res$x)
+
+#train the model
+legal.learn <- train(learner = legal.learn, task = legal.train)
+
+#How did the model do?
+predicted <- predict(legal.learn, legal.test)
+performance(predicted, acc)
+#86%, not as good.
+
+#Plot that:
+learningCurve2 <- generateLearningCurveData("classif.ksvm", legal.train, percs = seq(0.05, 1, by = 0.05), measures = list(tp, fn, acc, mmce))
+plotLearningCurve(learningCurve2)
+
+#What features matter?
+filterValues2 <- generateFilterValuesData(legal.train, method = c("information.gain", "chi.squared"))
+plotFilterValues(filterValues2, n.show = 16)
+
+#What does this tell us?
+head(predicted$data)
+```
