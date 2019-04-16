@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## CASE STUDY 02 Plot Analysis
-```{r }
+```{r warning=FALSE}
 library(openxlsx)
 library(MASS)
 library(ggplot2)
@@ -60,7 +60,9 @@ attritionMaleData <- as.data.frame(attritionData[as.character(attritionData$Gend
 attritionData$MaleTotal <- length(attritionMaleData)
 attritionData$YesFemaleTotal <- length(attritionData$Attrition[as.character(attritionData$Attrition) == "Yes" & as.character(attritionData$Gender) == "Female"]) 
 attritionData$YesMaleTotal <- length(attritionData$Attrition[as.character(attritionData$Attrition) == "Yes" & as.character(attritionData$Gender) == "Male"])
-
+```
+## Generate Linear model and check assumptions
+```{r warning=FALSE}
 # generate linear model and run stepwise-selection model method
 lm.full <- glm(Attrition ~ DistanceFromHome + Age + MonthlyIncome + Education + HourlyRate + HourlyRate + MonthlyIncome + PerformanceRating + WorkLifeBalance + 
                     JobLevel + NumCompaniesWorked + YearsInCurrentRole + YearsInCurrentRole + YearlyIncomeGroup + DailyRate + JobRole + StockOptionLevel + 
@@ -79,7 +81,9 @@ pairs(~Attrition+JobRole+StockOptionLevel+EnvironmentSatisfaction,
 pairs(~Attrition+JobRole+StockOptionLevel+ YearlyIncomeGroup + EnvironmentSatisfaction + DistanceFromHome + 
         NumCompaniesWorked + Age + YearsInCurrentRole + YearsSinceLastPromotion + WorkLifeBalance + DailyRate,
       data=attritionData, main="Stepwise Variable Selection Matrix")
-
+```
+## Generate Plots with top attributes
+```{r warning=FALSE}
 # show histograms of attrition based on different categories
 ggplot(attritionData,aes(JobRole,fill=Attrition))+
     geom_histogram(color="black", stat="count", position="dodge")+
@@ -95,7 +99,7 @@ ggplot(attritionData,aes(StockOptionLevel,fill=Attrition))+
           axis.text.x = element_text(angle = 90, hjust = 1),
           plot.title = element_text(hjust = 0.5))
 
-attritionData$EnvironmentSatisfaction <- factor(attritionData$EnvironmentSatisfaction,                                                 
+attritionData$EnvironmentSatisfaction <- factor(attritionData$EnvironmentSatisfaction,                                    
                                                 labels=c("Low","Medium","High","Very High"))
 ggplot(attritionData,aes(EnvironmentSatisfaction,fill=Attrition))+
     geom_histogram(color="black", stat="count", position="dodge")+
