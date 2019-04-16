@@ -79,16 +79,76 @@ ggplot(workers) + geom_bar(mapping = aes(x = Department, fill = Attrition), posi
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ggplot(workers) + geom_bar(mapping = aes(x = EducationField, fill = Attrition), position = "fill")  + 
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(workers) + geom_bar(mapping = aes(x = EnvironmentSatisfaction, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ggplot(workers) + geom_bar(mapping = aes(x = Gender, fill = Attrition), position = "fill")  + 
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ggplot(workers) + geom_bar(mapping = aes(x = JobRole, fill = Attrition), position = "fill") + 
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + 
   theme(legend.position = "none", axis.text.x = element_text(angle = 90, hjust = 1))
+ggplot(workers) + geom_bar(mapping = aes(x = JobSatisfaction, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ggplot(workers) + geom_bar(mapping = aes(x = MaritalStatus, fill = Attrition), position = "fill") + 
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ggplot(workers) + geom_bar(mapping = aes(x = OverTime, fill = Attrition), position = "fill")  + 
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
-ggplot(workers) + geom_boxplot(mapping = aes(x = Attrition, y = MonthlyIncome))
+ggplot(workers) + geom_bar(mapping = aes(x = StockOptionLevel, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+ggplot(workers) + geom_boxplot(mapping = aes(x = Attrition, y = MonthlyIncome), fill = "skyblue1")
+```
+
+# Visualization of selected interactions
+
+```{r Viz}
+# derive annual income and classify into income group based on quantiles 367/368 group
+library(classInt)
+workers$YearlyIncome <- workers$MonthlyIncome*12
+workers$YearlyIncomeGroup <- cut(workers$YearlyIncome, 
+                                       breaks=data.frame(
+                                           classIntervals(
+                                               workers$YearlyIncome, n=4,
+                                               method="quantile")[2])[,1],
+                                       include.lowest=T,dig.lab=10, labels = c('lower','lower-middle','upper-middle','upper'))
+# show histograms of attrition based on different categories
+ggplot(workers,aes(YearlyIncomeGroup, fill=Attrition))+
+    geom_histogram(color="black", stat="count")+
+    labs(title="Yearly Income Group Attrition Histogram by Job Role Plot",
+         x="Yearly Income Group", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5))+
+    facet_grid(. ~ JobRole)
+ggplot(workers,aes(YearsSinceLastPromotion,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Years Since Last Promotion Attrition Histogram Plot",
+         x="Years Since Last Promotion", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+    coord_cartesian(ylim=c(0, 150))
+workers$WorkLifeBalance <- factor(workers$WorkLifeBalance, labels=c("Bad","Good","Better","Best"))
+ggplot(workers,aes(YearsSinceLastPromotion,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Years Since Last Promotion by Work Life Balance Attrition Histogram Plot",
+         x="Years Since Last Promotion", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) + 
+    facet_grid(. ~ WorkLifeBalance)+
+    coord_cartesian(ylim=c(0, 75))
+# heat maps
+library(hexbin)
+hexbinplot(DistanceFromHome ~ Age | Attrition, workers,
+           xlab="Age", ylab="Distance From Home", 
+           main="Distance From Home by Age")
+
+hexbinplot(JobLevel ~ MonthlyIncome | Attrition, workers,
+           ylab="Job Level", xlab="Monthly Income",
+           main="Job Level by Monthly Income")
+
+hexbinplot(MonthlyIncome ~ Age | Attrition, workers,
+           ylab="Monthly Income", xlab="Age",
+           main="Monthly Income by Age")
 ```
 
 # Creating a predictive model
@@ -230,7 +290,7 @@ ggplot(salesRep) + geom_bar(mapping = aes(x = JobSatisfaction, fill = Attrition)
 
 # What factors lead to high attrition for laboratory technicians?
 
-Like the sales representatives, we wanted to identify the top factors leading to attrition for laboratory technicians. Again, we ran a forward selection logistic regression model. We found that the top four factors associated with attrition for laboratory technicians were
+Like the sales representatives, we wanted to identify the top factors leading to attrition for laboratory technicians. Again, we ran a forward selection logistic regression model. We found that the top four factors associated with attrition for laboratory technicians were overtime, years at company, stock option level, and environment satisfaction.
 
 ```{r LabTech}
 # Subset the data
@@ -257,3 +317,7 @@ ggplot(labTech) + geom_bar(mapping = aes(x = StockOptionLevel, fill = Attrition)
 ggplot(labTech) + geom_bar(mapping = aes(x = EnvironmentSatisfaction, fill = Attrition), position = "fill") +
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ```
+
+# Conclusion
+
+Overtime and job role are highly associated with employee attrition. Other factors include monthly income, job and enviroment satisfaction, stock option level, marital status, and years at company and in the current role. We suggest the company hire more people to reduce the workload on everyone and reduce the need for overtime. The company should also work on engaging its employees more and making them more comfortable to raise job and environment satisfaction, and keep their employees invested by offering more stock options.

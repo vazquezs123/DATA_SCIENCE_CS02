@@ -888,11 +888,18 @@ ggplot(workers) + geom_bar(mapping = aes(x = EducationField, fill = Attrition), 
 ![](attrition_eda_files/figure-html/unnamed-chunk-1-3.png)<!-- -->
 
 ```r
-ggplot(workers) + geom_bar(mapping = aes(x = Gender, fill = Attrition), position = "fill")  + 
+ggplot(workers) + geom_bar(mapping = aes(x = EnvironmentSatisfaction, fill = Attrition), position = "fill")  + 
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ```
 
 ![](attrition_eda_files/figure-html/unnamed-chunk-1-4.png)<!-- -->
+
+```r
+ggplot(workers) + geom_bar(mapping = aes(x = Gender, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+```
+
+![](attrition_eda_files/figure-html/unnamed-chunk-1-5.png)<!-- -->
 
 ```r
 ggplot(workers) + geom_bar(mapping = aes(x = JobRole, fill = Attrition), position = "fill") + 
@@ -900,27 +907,121 @@ ggplot(workers) + geom_bar(mapping = aes(x = JobRole, fill = Attrition), positio
   theme(legend.position = "none", axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
-![](attrition_eda_files/figure-html/unnamed-chunk-1-5.png)<!-- -->
-
-```r
-ggplot(workers) + geom_bar(mapping = aes(x = MaritalStatus, fill = Attrition), position = "fill") + 
-  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
-```
-
 ![](attrition_eda_files/figure-html/unnamed-chunk-1-6.png)<!-- -->
 
 ```r
-ggplot(workers) + geom_bar(mapping = aes(x = OverTime, fill = Attrition), position = "fill")  + 
+ggplot(workers) + geom_bar(mapping = aes(x = JobSatisfaction, fill = Attrition), position = "fill")  + 
   geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ```
 
 ![](attrition_eda_files/figure-html/unnamed-chunk-1-7.png)<!-- -->
 
 ```r
-ggplot(workers) + geom_boxplot(mapping = aes(x = Attrition, y = MonthlyIncome))
+ggplot(workers) + geom_bar(mapping = aes(x = MaritalStatus, fill = Attrition), position = "fill") + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
 ```
 
 ![](attrition_eda_files/figure-html/unnamed-chunk-1-8.png)<!-- -->
+
+```r
+ggplot(workers) + geom_bar(mapping = aes(x = OverTime, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+```
+
+![](attrition_eda_files/figure-html/unnamed-chunk-1-9.png)<!-- -->
+
+```r
+ggplot(workers) + geom_bar(mapping = aes(x = StockOptionLevel, fill = Attrition), position = "fill")  + 
+  geom_hline(yintercept = 0.16, size = 1) + ylab("Attrition Rate") + theme(legend.position = "none")
+```
+
+![](attrition_eda_files/figure-html/unnamed-chunk-1-10.png)<!-- -->
+
+```r
+ggplot(workers) + geom_boxplot(mapping = aes(x = Attrition, y = MonthlyIncome), fill = "skyblue1")
+```
+
+![](attrition_eda_files/figure-html/unnamed-chunk-1-11.png)<!-- -->
+
+# Visualization of selected interactions
+
+
+```r
+# derive annual income and classify into income group based on quantiles 367/368 group
+library(classInt)
+workers$YearlyIncome <- workers$MonthlyIncome*12
+workers$YearlyIncomeGroup <- cut(workers$YearlyIncome, 
+                                       breaks=data.frame(
+                                           classIntervals(
+                                               workers$YearlyIncome, n=4,
+                                               method="quantile")[2])[,1],
+                                       include.lowest=T,dig.lab=10, labels = c('lower','lower-middle','upper-middle','upper'))
+# show histograms of attrition based on different categories
+ggplot(workers,aes(YearlyIncomeGroup, fill=Attrition))+
+    geom_histogram(color="black", stat="count")+
+    labs(title="Yearly Income Group Attrition Histogram by Job Role Plot",
+         x="Yearly Income Group", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5))+
+    facet_grid(. ~ JobRole)
+```
+
+![](attrition_eda_files/figure-html/Viz-1.png)<!-- -->
+
+```r
+ggplot(workers,aes(YearsSinceLastPromotion,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Years Since Last Promotion Attrition Histogram Plot",
+         x="Years Since Last Promotion", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+    coord_cartesian(ylim=c(0, 150))
+```
+
+![](attrition_eda_files/figure-html/Viz-2.png)<!-- -->
+
+```r
+workers$WorkLifeBalance <- factor(workers$WorkLifeBalance, labels=c("Bad","Good","Better","Best"))
+ggplot(workers,aes(YearsSinceLastPromotion,fill=Attrition))+
+    geom_histogram(color="black", stat="count", position="dodge")+
+    labs(title="Years Since Last Promotion by Work Life Balance Attrition Histogram Plot",
+         x="Years Since Last Promotion", y = "Frequency") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) + 
+    facet_grid(. ~ WorkLifeBalance)+
+    coord_cartesian(ylim=c(0, 75))
+```
+
+![](attrition_eda_files/figure-html/Viz-3.png)<!-- -->
+
+```r
+# heat maps
+library(hexbin)
+hexbinplot(DistanceFromHome ~ Age | Attrition, workers,
+           xlab="Age", ylab="Distance From Home", 
+           main="Distance From Home by Age")
+```
+
+![](attrition_eda_files/figure-html/Viz-4.png)<!-- -->
+
+```r
+hexbinplot(JobLevel ~ MonthlyIncome | Attrition, workers,
+           ylab="Job Level", xlab="Monthly Income",
+           main="Job Level by Monthly Income")
+```
+
+![](attrition_eda_files/figure-html/Viz-5.png)<!-- -->
+
+```r
+hexbinplot(MonthlyIncome ~ Age | Attrition, workers,
+           ylab="Monthly Income", xlab="Age",
+           main="Monthly Income by Age")
+```
+
+![](attrition_eda_files/figure-html/Viz-6.png)<!-- -->
 
 # Creating a predictive model
 
@@ -971,7 +1072,7 @@ performance(predicted, acc)
 
 ```
 ##       acc 
-## 0.8367347
+## 0.8469388
 ```
 
 ```r
@@ -997,12 +1098,12 @@ head(predicted$data)
 
 ```
 ##    id truth   prob.No   prob.Yes response
-## 5   1    No 0.5933891 0.40661092       No
-## 9   2    No 0.9099396 0.09006044       No
-## 14  3    No 0.9302949 0.06970514       No
-## 15  4   Yes 0.5047745 0.49522548       No
-## 16  5    No 0.9173945 0.08260552       No
-## 17  6    No 0.9190378 0.08096223       No
+## 5   1    No 0.6643146 0.33568543       No
+## 9   2    No 0.8952433 0.10475666       No
+## 14  3    No 0.9386991 0.06130091       No
+## 15  4   Yes 0.3030191 0.69698093      Yes
+## 16  5    No 0.8950972 0.10490283       No
+## 17  6    No 0.9350026 0.06499738       No
 ```
 
 # Controlling for discrimination
@@ -1047,7 +1148,7 @@ performance(predicted, acc)
 
 ```
 ##       acc 
-## 0.8979592
+## 0.8945578
 ```
 
 ```r
@@ -1073,12 +1174,12 @@ head(predicted$data)
 
 ```
 ##    id truth   prob.No   prob.Yes response
-## 5   1    No 0.8213454 0.17865457       No
-## 7   2    No 0.8460374 0.15396262       No
-## 17  3    No 0.9372787 0.06272131       No
-## 19  4    No 0.7145767 0.28542327       No
-## 21  5    No 0.9610532 0.03894684       No
-## 23  6    No 0.9499947 0.05000528       No
+## 5   1    No 0.8481694 0.15183057       No
+## 7   2    No 0.8554254 0.14457459       No
+## 17  3    No 0.9572560 0.04274401       No
+## 19  4    No 0.7102762 0.28972381       No
+## 21  5    No 0.9645595 0.03544054       No
+## 23  6    No 0.9379004 0.06209962       No
 ```
 
 # What factors lead to high attrition for sales representatives?
@@ -1123,7 +1224,7 @@ add1(lm.null, ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education +
 ## StockOptionLevel          1  108.798 112.80  2.7582 0.096755 . 
 ## TotalWorkingYears         1  108.083 112.08  3.4732 0.062371 . 
 ## TrainingTimesLastYear     1  111.334 115.33  0.2215 0.637875   
-## WorkLifeBalance           1  106.685 110.69  4.8703 0.027323 * 
+## WorkLifeBalance           3  100.012 108.01 11.5441 0.009120 **
 ## YearsAtCompany            1  105.712 109.71  5.8436 0.015634 * 
 ## YearsInCurrentRole        1  104.311 108.31  7.2447 0.007111 **
 ## YearsSinceLastPromotion   1  106.323 110.32  5.2331 0.022162 * 
@@ -1164,7 +1265,7 @@ add1(update(lm.null,~ . + BusinessTravel), ~Age + BusinessTravel + DailyRate + D
 ## StockOptionLevel          1   96.890 104.89 2.3758 0.123227   
 ## TotalWorkingYears         1   96.395 104.39 2.8700 0.090244 . 
 ## TrainingTimesLastYear     1   98.473 106.47 0.7924 0.373385   
-## WorkLifeBalance           1   97.548 105.55 1.7178 0.189978   
+## WorkLifeBalance           3   91.439 103.44 7.8260 0.049747 * 
 ## YearsAtCompany            1   94.472 102.47 4.7934 0.028569 * 
 ## YearsInCurrentRole        1   92.566 100.57 6.7000 0.009641 **
 ## YearsSinceLastPromotion   1   92.879 100.88 6.3860 0.011502 * 
@@ -1204,7 +1305,7 @@ add1(update(lm.null,~ . + BusinessTravel + OverTime), ~Age + BusinessTravel + Da
 ## StockOptionLevel          1   86.370 96.370 3.4600 0.062871 . 
 ## TotalWorkingYears         1   85.966 95.966 3.8641 0.049331 * 
 ## TrainingTimesLastYear     1   88.842 98.842 0.9885 0.320115   
-## WorkLifeBalance           1   86.819 96.819 3.0112 0.082693 . 
+## WorkLifeBalance           3   80.997 94.997 8.8330 0.031596 * 
 ## YearsAtCompany            1   82.363 92.363 7.4671 0.006284 **
 ## YearsInCurrentRole        1   80.880 90.880 8.9504 0.002774 **
 ## YearsSinceLastPromotion   1   83.217 93.217 6.6130 0.010124 * 
@@ -1244,7 +1345,7 @@ add1(update(lm.null,~ . + BusinessTravel + OverTime + YearsInCurrentRole), ~Age 
 ## StockOptionLevel          1   78.839 90.839 2.0412  0.15309  
 ## TotalWorkingYears         1   80.845 92.845 0.0352  0.85111  
 ## TrainingTimesLastYear     1   79.866 91.866 1.0140  0.31394  
-## WorkLifeBalance           1   79.082 91.082 1.7985  0.17989  
+## WorkLifeBalance           3   74.463 90.463 6.4174  0.09298 .
 ## YearsAtCompany            1   80.880 92.880 0.0000  0.99779  
 ## YearsSinceLastPromotion   1   80.776 92.776 0.1044  0.74666  
 ## YearsWithCurrManager      1   80.635 92.635 0.2449  0.62066  
@@ -1320,7 +1421,7 @@ ggplot(salesRep) + geom_bar(mapping = aes(x = JobSatisfaction, fill = Attrition)
 
 # What factors lead to high attrition for laboratory technicians?
 
-Like the sales representatives, we wanted to identify the top factors leading to attrition for laboratory technicians. Again, we ran a forward selection logistic regression model. We found that the top four factors associated with attrition for laboratory technicians were
+Like the sales representatives, we wanted to identify the top factors leading to attrition for laboratory technicians. Again, we ran a forward selection logistic regression model. We found that the top four factors associated with attrition for laboratory technicians were overtime, years at company, stock option level, and environment satisfaction.
 
 
 ```r
@@ -1360,7 +1461,7 @@ add1(lm.null, ~Age + BusinessTravel + DailyRate + DistanceFromHome + Education +
 ## StockOptionLevel          1   274.25 278.25 10.8441 0.0009911 ***
 ## TotalWorkingYears         1   276.57 280.57  8.5244 0.0035042 ** 
 ## TrainingTimesLastYear     1   280.88 284.88  4.2063 0.0402746 *  
-## WorkLifeBalance           1   270.80 274.80 14.2925 0.0001565 ***
+## WorkLifeBalance           3   262.04 270.04 23.0465 3.949e-05 ***
 ## YearsAtCompany            1   265.28 269.28 19.8105 8.551e-06 ***
 ## YearsInCurrentRole        1   274.28 278.28 10.8073 0.0010110 ** 
 ## YearsSinceLastPromotion   1   282.32 286.32  2.7648 0.0963595 .  
@@ -1401,7 +1502,7 @@ add1(update(lm.null, ~ . + OverTime), ~Age + BusinessTravel + DailyRate + Distan
 ## StockOptionLevel          1   244.54 250.54 12.9003 0.0003285 ***
 ## TotalWorkingYears         1   248.39 254.39  9.0525 0.0026234 ** 
 ## TrainingTimesLastYear     1   255.48 261.48  1.9691 0.1605452    
-## WorkLifeBalance           1   247.53 253.53  9.9107 0.0016432 ** 
+## WorkLifeBalance           3   238.28 248.28 19.1627 0.0002530 ***
 ## YearsAtCompany            1   239.37 245.37 18.0781  2.12e-05 ***
 ## YearsInCurrentRole        1   245.34 251.34 12.1033 0.0005033 ***
 ## YearsSinceLastPromotion   1   255.74 261.74  1.7056 0.1915625    
@@ -1442,7 +1543,7 @@ add1(update(lm.null, ~ . + OverTime + YearsAtCompany), ~Age + BusinessTravel + D
 ## StockOptionLevel          1   226.87 234.87 12.4939 0.0004083 ***
 ## TotalWorkingYears         1   238.95 246.95  0.4164 0.5187220    
 ## TrainingTimesLastYear     1   237.71 245.71  1.6611 0.1974568    
-## WorkLifeBalance           1   232.20 240.20  7.1671 0.0074254 ** 
+## WorkLifeBalance           3   221.08 233.08 18.2891 0.0003834 ***
 ## YearsInCurrentRole        1   238.91 246.91  0.4551 0.4999342    
 ## YearsSinceLastPromotion   1   237.96 245.96  1.4042 0.2360133    
 ## YearsWithCurrManager      1   239.20 247.20  0.1632 0.6862188    
@@ -1459,32 +1560,32 @@ add1(update(lm.null, ~ . + OverTime + YearsAtCompany + StockOptionLevel), ~Age +
 ## 
 ## Model:
 ## Attrition ~ OverTime + YearsAtCompany + StockOptionLevel
-##                          Df Deviance    AIC    LRT Pr(>Chi)   
-## <none>                        226.87 234.87                   
-## Age                       1   221.11 231.11 5.7640 0.016357 * 
-## BusinessTravel            2   222.06 234.06 4.8098 0.090276 . 
-## DailyRate                 1   226.63 236.63 0.2423 0.622567   
-## DistanceFromHome          1   225.66 235.66 1.2182 0.269722   
-## Education                 1   226.71 236.71 0.1630 0.686375   
-## EnvironmentSatisfaction   1   217.42 227.42 9.4504 0.002111 **
-## Gender                    1   224.70 234.70 2.1738 0.140380   
-## HourlyRate                1   226.80 236.80 0.0740 0.785583   
-## JobInvolvement            1   223.64 233.64 3.2324 0.072194 . 
-## JobLevel                  1   224.20 234.20 2.6754 0.101913   
-## JobSatisfaction           1   220.29 230.29 6.5862 0.010277 * 
-## MaritalStatus             2   223.80 235.80 3.0712 0.215323   
-## MonthlyIncome             1   224.15 234.15 2.7263 0.098705 . 
-## MonthlyRate               1   226.59 236.59 0.2856 0.593080   
-## NumCompaniesWorked        1   226.75 236.75 0.1271 0.721460   
-## PercentSalaryHike         1   226.61 236.61 0.2668 0.605467   
-## PerformanceRating         1   226.05 236.05 0.8268 0.363193   
-## RelationshipSatisfaction  1   224.86 234.86 2.0146 0.155796   
-## TotalWorkingYears         1   226.02 236.02 0.8546 0.355245   
-## TrainingTimesLastYear     1   223.97 233.97 2.9047 0.088320 . 
-## WorkLifeBalance           1   221.18 231.18 5.6894 0.017068 * 
-## YearsInCurrentRole        1   226.28 236.28 0.5983 0.439236   
-## YearsSinceLastPromotion   1   225.19 235.19 1.6817 0.194697   
-## YearsWithCurrManager      1   226.56 236.56 0.3140 0.575262   
+##                          Df Deviance    AIC     LRT Pr(>Chi)   
+## <none>                        226.87 234.87                    
+## Age                       1   221.11 231.11  5.7640 0.016357 * 
+## BusinessTravel            2   222.06 234.06  4.8098 0.090276 . 
+## DailyRate                 1   226.63 236.63  0.2423 0.622567   
+## DistanceFromHome          1   225.66 235.66  1.2182 0.269722   
+## Education                 1   226.71 236.71  0.1630 0.686375   
+## EnvironmentSatisfaction   1   217.42 227.42  9.4504 0.002111 **
+## Gender                    1   224.70 234.70  2.1738 0.140380   
+## HourlyRate                1   226.80 236.80  0.0740 0.785583   
+## JobInvolvement            1   223.64 233.64  3.2324 0.072194 . 
+## JobLevel                  1   224.20 234.20  2.6754 0.101913   
+## JobSatisfaction           1   220.29 230.29  6.5862 0.010277 * 
+## MaritalStatus             2   223.80 235.80  3.0712 0.215323   
+## MonthlyIncome             1   224.15 234.15  2.7263 0.098705 . 
+## MonthlyRate               1   226.59 236.59  0.2856 0.593080   
+## NumCompaniesWorked        1   226.75 236.75  0.1271 0.721460   
+## PercentSalaryHike         1   226.61 236.61  0.2668 0.605467   
+## PerformanceRating         1   226.05 236.05  0.8268 0.363193   
+## RelationshipSatisfaction  1   224.86 234.86  2.0146 0.155796   
+## TotalWorkingYears         1   226.02 236.02  0.8546 0.355245   
+## TrainingTimesLastYear     1   223.97 233.97  2.9047 0.088320 . 
+## WorkLifeBalance           3   212.23 226.23 14.6413 0.002150 **
+## YearsInCurrentRole        1   226.28 236.28  0.5983 0.439236   
+## YearsSinceLastPromotion   1   225.19 235.19  1.6817 0.194697   
+## YearsWithCurrManager      1   226.56 236.56  0.3140 0.575262   
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
@@ -1553,3 +1654,7 @@ ggplot(labTech) + geom_bar(mapping = aes(x = EnvironmentSatisfaction, fill = Att
 ```
 
 ![](attrition_eda_files/figure-html/LabTech Viz-4.png)<!-- -->
+
+# Conclusion
+
+Overtime and job role are highly associated with employee attrition. Other factors include monthly income, job and enviroment satisfaction, stock option level, marital status, and years at company and in the current role. We suggest the company hire more people to reduce the workload on everyone and reduce the need for overtime. The company should also work on engaging its employees more and making them more comfortable to raise job and environment satisfaction, and keep their employees invested by offering more stock options.
